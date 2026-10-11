@@ -86,6 +86,8 @@ class DiscordUserPersistenceTests {
         assertThat(loaded.getDiscordUserId()).isEqualTo("123456789012345678");
         assertThat(loaded.getDiscordUsername()).isEqualTo("task5-user");
         assertThat(loaded.getCreatedAt()).isNotNull();
+        assertThat(loaded.getCreatedAt()).isEqualTo(user.getCreatedAt());
+        assertThat(loaded.getUpdatedAt()).isEqualTo(user.getUpdatedAt());
         assertThat(loaded.getUpdatedAt()).isEqualTo(loaded.getCreatedAt());
     }
 
@@ -98,7 +100,6 @@ class DiscordUserPersistenceTests {
         entityManager.clear();
 
         DiscordUser loaded = entityManager.find(DiscordUser.class, id);
-        // Compare database round-tripped timestamps to avoid Java/PostgreSQL precision differences.
         Instant createdAt = loaded.getCreatedAt();
         Instant previousUpdatedAt = loaded.getUpdatedAt();
 
@@ -112,5 +113,6 @@ class DiscordUserPersistenceTests {
         assertThat(updated.getDiscordUsername()).isEqualTo("new-name");
         assertThat(updated.getCreatedAt()).isEqualTo(createdAt);
         assertThat(updated.getUpdatedAt()).isAfter(previousUpdatedAt);
+        assertThat(updated.getUpdatedAt()).isEqualTo(loaded.getUpdatedAt());
     }
 }

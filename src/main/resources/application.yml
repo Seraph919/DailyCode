@@ -8,8 +8,18 @@ spring:
     hikari:
       connection-timeout: 5000
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
       format_sql: true
       highlight_sql: true
     show-sql: true
+
+server:
+  address: 127.0.0.1
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
