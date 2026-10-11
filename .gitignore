@@ -1,0 +1,13 @@
+/target/
+.mvn/
+# Editor metadata
+/.idea/
+/.vscode/
+*.iml
+
+# Local secrets: examples may be committed, actual values must stay local.
+.env
+.env.*
+!.env.example
+*.log
+README.md
