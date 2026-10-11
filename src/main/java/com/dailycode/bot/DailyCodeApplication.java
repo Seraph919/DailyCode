@@ -8,6 +8,5 @@ public class DailyCodeApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DailyCodeApplication.class, args);
-        System.out.print("\n-INIT-\n\n");
     }
 }
