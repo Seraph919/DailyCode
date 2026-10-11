@@ -10,3 +10,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+      format_sql: true
+      highlight_sql: true
+    show-sql: true
