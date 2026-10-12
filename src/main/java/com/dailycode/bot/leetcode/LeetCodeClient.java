@@ -1,5 +1,6 @@
 package com.dailycode.bot.leetcode;
 
+import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfile;
 import com.dailycode.bot.leetcode.dto.GraphQlRequest;
 import com.dailycode.bot.leetcode.dto.LeetCodeMatchedUser;
 import com.dailycode.bot.leetcode.dto.LeetCodeProfileResponse;
@@ -31,7 +32,7 @@ public class LeetCodeClient {
         this.webClient = webClient;
     }
 
-    public LeetCodeMatchedUser fetchProfile(String username) {
+    public LeetCodeUserProfile fetchProfile(String username) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("LeetCode username must not be blank.");
         }
@@ -77,6 +78,9 @@ public class LeetCodeClient {
             throw new LeetCodeClientException("LeetCode returned a user without a profile.");
         }
 
-        return user;
+        LeetCodeUserProfile profile = new LeetCodeUserProfile();
+        profile.setUsername(user.getUsername());
+        profile.setRanking(user.getProfile().getRanking());
+        return profile;
     }
 }
