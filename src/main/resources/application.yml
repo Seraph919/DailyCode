@@ -18,6 +18,10 @@ spring:
 server:
   address: 127.0.0.1
 
+discord:
+  token: ${DISCORD_TOKEN:}
+  test-guild-id: ${DISCORD_TEST_GUILD_ID:}
+
 springdoc:
   api-docs:
     enabled: false
