@@ -1,12 +1,15 @@
 package com.dailycode.bot;
 
+import com.dailycode.bot.support.PostgresTestConfiguration;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Import(PostgresTestConfiguration.class)
 @SpringBootTest(properties = "spring.profiles.active=test")
 class DailyCodeApplicationTests {
 
@@ -14,6 +17,9 @@ class DailyCodeApplicationTests {
     void connectsToPostgresThroughJpa(@Autowired EntityManager entityManager) {
         Object result = entityManager.createNativeQuery("SELECT 1").getSingleResult();
         assertThat(result).isEqualTo(1);
+
+        Object databaseName = entityManager.createNativeQuery("SELECT current_database()").getSingleResult();
+        assertThat(databaseName).isEqualTo("dailycode_test");
     }
 
     @Test

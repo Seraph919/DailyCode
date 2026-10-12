@@ -1,5 +1,6 @@
 package com.dailycode.bot.discord;
 
+import com.dailycode.bot.support.PostgresTestConfiguration;
 import com.dailycode.bot.application.user.DiscordUserService;
 import com.dailycode.bot.domain.user.DiscordUser;
 import com.dailycode.bot.repository.DiscordUserRepository;
@@ -10,12 +11,14 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@Import(PostgresTestConfiguration.class)
 @SpringBootTest(properties = "spring.profiles.active=test")
 @Transactional
 class DiscordUserRegistrationPersistenceTests {

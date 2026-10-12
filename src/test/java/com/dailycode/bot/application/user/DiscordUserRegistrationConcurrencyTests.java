@@ -1,10 +1,12 @@
 package com.dailycode.bot.application.user;
 
+import com.dailycode.bot.support.PostgresTestConfiguration;
 import com.dailycode.bot.domain.user.DiscordUser;
 import com.dailycode.bot.repository.DiscordUserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.concurrent.CountDownLatch;
@@ -16,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@Import(PostgresTestConfiguration.class)
 @SpringBootTest(properties = "spring.profiles.active=test")
 class DiscordUserRegistrationConcurrencyTests {
 
