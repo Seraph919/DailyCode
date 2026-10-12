@@ -1,0 +1,7 @@
+{
+  "operationName": "GetUserProfile",
+  "query": "query GetUserProfile($username: String!) { matchedUser(username: $username) { username profile { ranking } } }",
+  "variables": {
+    "username": "Seraph919"
+  }
+}
