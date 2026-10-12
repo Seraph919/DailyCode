@@ -22,6 +22,9 @@ discord:
   token: ${DISCORD_TOKEN:}
   test-guild-id: ${DISCORD_TEST_GUILD_ID:}
 
+leetcode:
+  base-url: https://leetcode.com
+
 springdoc:
   api-docs:
     enabled: false
