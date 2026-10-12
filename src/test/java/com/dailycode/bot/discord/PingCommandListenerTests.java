@@ -2,13 +2,12 @@ package com.dailycode.bot.discord;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 
@@ -32,13 +31,12 @@ class PingCommandListenerTests {
         when(jda.getGuildById(GUILD_ID)).thenReturn(guild);
         when(guild.upsertCommand("ping", "Check whether DailyCode is responding.")).thenReturn(action);
         when(command.getId()).thenReturn("987654321");
-        doAnswer(invocation -> {
-            Consumer<Command> success = invocation.getArgument(0);
-            success.accept(command);
-            return null;
-        }).when(action).queue(any(), any());
 
         listener.onReady(readyEvent(jda));
+
+        ArgumentCaptor<Consumer<Command>> successCallback = ArgumentCaptor.captor();
+        verify(action).queue(successCallback.capture(), any());
+        successCallback.getValue().accept(command);
 
         verify(jda).getGuildById(GUILD_ID);
         verify(guild).upsertCommand("ping", "Check whether DailyCode is responding.");
@@ -83,74 +81,15 @@ class PingCommandListenerTests {
         CommandCreateAction action = mock(CommandCreateAction.class);
         when(jda.getGuildById(GUILD_ID)).thenReturn(guild);
         when(guild.upsertCommand("ping", "Check whether DailyCode is responding.")).thenReturn(action);
-        doAnswer(invocation -> {
-            Consumer<Throwable> failure = invocation.getArgument(1);
-            failure.accept(new IllegalStateException("Missing Access"));
-            return null;
-        }).when(action).queue(any(), any());
 
         listener.onReady(readyEvent(jda));
 
+        ArgumentCaptor<Consumer<Throwable>> failureCallback = ArgumentCaptor.captor();
+        verify(action).queue(any(), failureCallback.capture());
+        failureCallback.getValue().accept(new IllegalStateException("Missing Access"));
+
         assertThat(output.getOut()).contains("Could not register /ping", "Missing Access")
                 .doesNotContain("Registered /ping");
-    }
-
-    @Test
-    void repliesPongToPingInTheTestGuild() {
-        SlashCommandInteractionEvent event = guildInteraction("ping", GUILD_ID);
-        ReplyCallbackAction reply = mock(ReplyCallbackAction.class);
-        when(event.reply("Pong!")).thenReturn(reply);
-
-        listener.onSlashCommandInteraction(event);
-
-        verify(event).reply("Pong!");
-        verify(reply).queue(any(), any());
-    }
-
-    @Test
-    void ignoresOtherCommands() {
-        SlashCommandInteractionEvent event = mock(SlashCommandInteractionEvent.class);
-        when(event.getName()).thenReturn("challenge");
-
-        listener.onSlashCommandInteraction(event);
-
-        verify(event, never()).reply(anyString());
-    }
-
-    @Test
-    void ignoresPingFromOtherGuilds() {
-        SlashCommandInteractionEvent event = guildInteraction("ping", "111111111111111111");
-
-        listener.onSlashCommandInteraction(event);
-
-        verify(event, never()).reply(anyString());
-    }
-
-    @Test
-    void ignoresDirectMessages() {
-        SlashCommandInteractionEvent event = mock(SlashCommandInteractionEvent.class);
-        when(event.getName()).thenReturn("ping");
-        when(event.isFromGuild()).thenReturn(false);
-
-        listener.onSlashCommandInteraction(event);
-
-        verify(event, never()).reply(anyString());
-    }
-
-    @Test
-    void reportsReplyFailure(CapturedOutput output) {
-        SlashCommandInteractionEvent event = guildInteraction("ping", GUILD_ID);
-        ReplyCallbackAction reply = mock(ReplyCallbackAction.class);
-        when(event.reply("Pong!")).thenReturn(reply);
-        doAnswer(invocation -> {
-            Consumer<Throwable> failure = invocation.getArgument(1);
-            failure.accept(new IllegalStateException("Unknown interaction"));
-            return null;
-        }).when(reply).queue(any(), any());
-
-        listener.onSlashCommandInteraction(event);
-
-        assertThat(output.getOut()).contains("Could not reply to /ping", "Unknown interaction");
     }
 
     private ReadyEvent readyEvent(JDA jda) {
@@ -159,13 +98,4 @@ class PingCommandListenerTests {
         return event;
     }
 
-    private SlashCommandInteractionEvent guildInteraction(String commandName, String guildId) {
-        SlashCommandInteractionEvent event = mock(SlashCommandInteractionEvent.class);
-        Guild guild = mock(Guild.class);
-        when(event.getName()).thenReturn(commandName);
-        when(event.isFromGuild()).thenReturn(true);
-        when(event.getGuild()).thenReturn(guild);
-        when(guild.getId()).thenReturn(guildId);
-        return event;
-    }
 }

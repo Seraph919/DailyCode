@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class DiscordUserRegistrationTransaction {
@@ -14,11 +16,15 @@ public class DiscordUserRegistrationTransaction {
 
     @Transactional
     public DiscordUser register(String discordUserId, String discordUsername) {
-        return repository.findByDiscordUserId(discordUserId)
-                .map(user -> {
-                    user.changeUsername(discordUsername);
-                    return user;
-                })
-                .orElseGet(() -> repository.save(new DiscordUser(discordUserId, discordUsername)));
+        Optional<DiscordUser> existingUser = repository.findByDiscordUserId(discordUserId);
+
+        if (existingUser.isPresent()) {
+            DiscordUser user = existingUser.get();
+            user.changeUsername(discordUsername);
+            return user;
+        }
+
+        DiscordUser newUser = new DiscordUser(discordUserId, discordUsername);
+        return repository.save(newUser);
     }
 }

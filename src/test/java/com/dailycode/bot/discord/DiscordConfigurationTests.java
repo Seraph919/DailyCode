@@ -28,6 +28,8 @@ class DiscordConfigurationTests {
                 assertThat(context).hasNotFailed().doesNotHaveBean(JDA.class);
                 assertThat(context).doesNotHaveBean(DiscordReadyListener.class);
                 assertThat(context).doesNotHaveBean(PingCommandListener.class);
+                assertThat(context).doesNotHaveBean(SlashCommandRouter.class);
+                assertThat(context).doesNotHaveBean(PingCommandHandler.class);
             });
             builders.verifyNoInteractions();
         }
@@ -71,7 +73,7 @@ class DiscordConfigurationTests {
                         assertThat(context).hasNotFailed().hasSingleBean(JDA.class);
                         assertThat(context.getBean(JDA.class)).isSameAs(jda);
                         verify(builder).addEventListeners(context.getBean(DiscordReadyListener.class),
-                                context.getBean(PingCommandListener.class));
+                                context.getBean(PingCommandListener.class), context.getBean(SlashCommandRouter.class));
                         verify(builder).setEnableShutdownHook(false);
                         verify(jda, never()).shutdown();
                     });

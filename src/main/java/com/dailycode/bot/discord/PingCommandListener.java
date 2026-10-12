@@ -3,9 +3,12 @@ package com.dailycode.bot.discord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.Command;
+import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
+
+import java.util.function.Consumer;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -13,6 +16,7 @@ public class PingCommandListener extends ListenerAdapter {
 
     private final String testGuildId;
 
+    // establishing the connection with the guild..
     @Override
     public void onReady(ReadyEvent event) {
         if (testGuildId.isBlank()) {
@@ -33,23 +37,26 @@ public class PingCommandListener extends ListenerAdapter {
             return;
         }
 
-        guild.upsertCommand("ping", "Check whether DailyCode is responding.")
-                .queue(command -> log.info("Registered /ping in guild {} (command id={}).",
-                                testGuildId, command.getId()),
-                        failure -> log.error("Could not register /ping in guild {}: {}",
-                                testGuildId, failure.getMessage()));
+        CommandCreateAction registration = guild.upsertCommand("ping", "Check whether DailyCode is responding.");
+        RegistrationSuccessLogger onSuccess = new RegistrationSuccessLogger();
+        RegistrationFailureLogger onFailure = new RegistrationFailureLogger();
+        registration.queue(onSuccess, onFailure);
     }
 
-    @Override
-    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        if (!"ping".equals(event.getName()) || !event.isFromGuild()
-                || !testGuildId.equals(event.getGuild().getId())) {
-            return;
+    private class RegistrationSuccessLogger implements Consumer<Command> {
+
+        @Override
+        public void accept(Command command) {
+            log.info("Registered /ping in guild {} (command id={}).", testGuildId, command.getId());
         }
-
-        event.reply("Pong!").queue(
-                hook -> log.debug("Replied to /ping in guild {}.", testGuildId),
-                failure -> log.warn("Could not reply to /ping in guild {}: {}",
-                        testGuildId, failure.getMessage()));
     }
+
+    private class RegistrationFailureLogger implements Consumer<Throwable> {
+
+        @Override
+        public void accept(Throwable failure) {
+            log.error("Could not register /ping in guild {}: {}", testGuildId, failure.getMessage());
+        }
+    }
+
 }
