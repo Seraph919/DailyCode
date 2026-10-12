@@ -1,5 +1,6 @@
 package com.dailycode.bot.discord;
 
+import com.dailycode.bot.application.user.DiscordUserService;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -7,9 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -19,7 +24,7 @@ class DiscordConfigurationTests {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withInitializer(context -> context.getEnvironment().getPropertySources()
                     .remove(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME))
-            .withUserConfiguration(DiscordConfiguration.class);
+            .withUserConfiguration(DiscordConfiguration.class, TestServices.class);
 
     @Test
     void staysDisabledWithoutTheDiscordProfileEvenWithAToken() {
@@ -30,6 +35,8 @@ class DiscordConfigurationTests {
                 assertThat(context).doesNotHaveBean(PingCommandListener.class);
                 assertThat(context).doesNotHaveBean(SlashCommandRouter.class);
                 assertThat(context).doesNotHaveBean(PingCommandHandler.class);
+                assertThat(context).doesNotHaveBean(DiscordUserRegistrationListener.class);
+                assertThat(context).doesNotHaveBean("discordRegistrationExecutor");
             });
             builders.verifyNoInteractions();
         }
@@ -62,6 +69,7 @@ class DiscordConfigurationTests {
         JDA jda = mock(JDA.class);
         JDABuilder builder = mock(JDABuilder.class, RETURNS_SELF);
         when(builder.build()).thenReturn(jda);
+        AtomicReference<ThreadPoolTaskExecutor> registrationExecutor = new AtomicReference<>();
 
         try (var builders = mockStatic(JDABuilder.class)) {
             builders.when(() -> JDABuilder.createLight("test-token", EnumSet.noneOf(GatewayIntent.class)))
@@ -73,13 +81,30 @@ class DiscordConfigurationTests {
                         assertThat(context).hasNotFailed().hasSingleBean(JDA.class);
                         assertThat(context.getBean(JDA.class)).isSameAs(jda);
                         verify(builder).addEventListeners(context.getBean(DiscordReadyListener.class),
-                                context.getBean(PingCommandListener.class), context.getBean(SlashCommandRouter.class));
+                                context.getBean(PingCommandListener.class), context.getBean(SlashCommandRouter.class),
+                                context.getBean(DiscordUserRegistrationListener.class));
+                        ThreadPoolTaskExecutor executor = context.getBean("discordRegistrationExecutor",
+                                ThreadPoolTaskExecutor.class);
+                        registrationExecutor.set(executor);
+                        assertThat(executor.getCorePoolSize()).isEqualTo(1);
+                        assertThat(executor.getMaxPoolSize()).isEqualTo(1);
+                        assertThat(executor.getQueueCapacity()).isEqualTo(25);
                         verify(builder).setEnableShutdownHook(false);
                         verify(jda, never()).shutdown();
                     });
 
             // ApplicationContextRunner closes Spring's context after the callback.
             verify(jda).shutdown();
+            assertThat(registrationExecutor.get().getThreadPoolExecutor().isShutdown()).isTrue();
+        }
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class TestServices {
+
+        @Bean
+        DiscordUserService discordUserService() {
+            return mock(DiscordUserService.class);
         }
     }
 }
