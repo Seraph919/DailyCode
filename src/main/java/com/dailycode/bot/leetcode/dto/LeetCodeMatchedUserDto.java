@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LeetCodeProfileData {
+public class LeetCodeMatchedUserDto {
 
-    private LeetCodeMatchedUser matchedUser;
+    private String username;
+    private LeetCodeProfileDto profile;
 }

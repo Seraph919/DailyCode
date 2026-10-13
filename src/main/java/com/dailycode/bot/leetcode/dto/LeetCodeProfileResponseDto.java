@@ -11,8 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LeetCodeProfileResponse {
+public class LeetCodeProfileResponseDto {
 
-    private LeetCodeProfileData data;
-    private List<GraphQlError> errors;
+    private LeetCodeProfileDataDto data;
+    private List<GraphQlErrorDto> errors;
 }

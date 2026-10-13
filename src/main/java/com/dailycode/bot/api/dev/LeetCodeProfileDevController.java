@@ -1,6 +1,6 @@
 package com.dailycode.bot.api.dev;
 
-import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfile;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfileDto;
 import com.dailycode.bot.leetcode.LeetCodeClient;
 import com.dailycode.bot.leetcode.LeetCodeClientException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +35,7 @@ public class LeetCodeProfileDevController {
     @ApiResponse(responseCode = "400", description = "Missing, blank, or overlong username", content = @Content)
     @ApiResponse(responseCode = "502", description = "LeetCode lookup failed", content = @Content)
     @GetMapping("/profile")
-    public LeetCodeUserProfile profile(
+    public LeetCodeUserProfileDto profile(
             @Parameter(example = "Seraph919")
             @RequestParam("username") @NotBlank @Size(max = 100) String username) {
         return client.fetchProfile(username);

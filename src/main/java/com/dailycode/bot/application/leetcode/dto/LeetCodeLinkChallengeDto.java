@@ -7,7 +7,7 @@ import java.time.Instant;
 
 @Getter
 @AllArgsConstructor
-public class LeetCodeLinkChallenge {
+public class LeetCodeLinkChallengeDto {
 
     private final String leetcodeUsername;
     private final String verificationToken;

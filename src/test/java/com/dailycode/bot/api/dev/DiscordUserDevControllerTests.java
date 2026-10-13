@@ -59,7 +59,7 @@ class DiscordUserDevControllerTests {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/dev/discord-users'].post").exists())
-                .andExpect(jsonPath("$.components.schemas.RegisterDiscordUserRequest.properties.discordUserId.maxLength")
+                .andExpect(jsonPath("$.components.schemas.RegisterDiscordUserRequestDto.properties.discordUserId.maxLength")
                         .value(20));
         mvc.perform(get("/swagger-ui/index.html"))
                 .andExpect(status().isOk());

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterDiscordUserRequest {
+public class RegisterDiscordUserRequestDto {
 
     @NotBlank
     @Size(max = 20)

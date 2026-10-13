@@ -1,10 +1,10 @@
 package com.dailycode.bot.leetcode;
 
-import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfile;
-import com.dailycode.bot.application.leetcode.dto.LeetCodeVerificationProfile;
-import com.dailycode.bot.leetcode.dto.GraphQlRequest;
-import com.dailycode.bot.leetcode.dto.LeetCodeMatchedUser;
-import com.dailycode.bot.leetcode.dto.LeetCodeProfileResponse;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfileDto;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeVerificationProfileDto;
+import com.dailycode.bot.leetcode.dto.GraphQlRequestDto;
+import com.dailycode.bot.leetcode.dto.LeetCodeMatchedUserDto;
+import com.dailycode.bot.leetcode.dto.LeetCodeProfileResponseDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -44,16 +44,16 @@ public class LeetCodeClient {
         this.webClient = webClient;
     }
 
-    public LeetCodeUserProfile fetchProfile(String username) {
-        LeetCodeMatchedUser user = fetchMatchedUser(username, "GetUserProfile", PROFILE_QUERY);
-        LeetCodeUserProfile profile = new LeetCodeUserProfile();
+    public LeetCodeUserProfileDto fetchProfile(String username) {
+        LeetCodeMatchedUserDto user = fetchMatchedUser(username, "GetUserProfile", PROFILE_QUERY);
+        LeetCodeUserProfileDto profile = new LeetCodeUserProfileDto();
         profile.setUsername(user.getUsername());
         profile.setRanking(user.getProfile().getRanking());
         return profile;
     }
 
-    public LeetCodeVerificationProfile fetchVerificationProfile(String username) {
-        LeetCodeMatchedUser user = fetchMatchedUser(username, "GetVerificationProfile", VERIFICATION_PROFILE_QUERY);
+    public LeetCodeVerificationProfileDto fetchVerificationProfile(String username) {
+        LeetCodeMatchedUserDto user = fetchMatchedUser(username, "GetVerificationProfile", VERIFICATION_PROFILE_QUERY);
         if (!user.getUsername().equalsIgnoreCase(username.strip())) {
             throw new LeetCodeClientException("LeetCode returned a different username.");
         }
@@ -61,10 +61,10 @@ public class LeetCodeClient {
             throw new LeetCodeClientException("LeetCode returned no verification profile text.");
         }
 
-        return new LeetCodeVerificationProfile(user.getUsername(), user.getProfile().getAboutMe());
+        return new LeetCodeVerificationProfileDto(user.getUsername(), user.getProfile().getAboutMe());
     }
 
-    private LeetCodeMatchedUser fetchMatchedUser(String username, String operationName, String query) {
+    private LeetCodeMatchedUserDto fetchMatchedUser(String username, String operationName, String query) {
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("LeetCode username must not be blank.");
         }
@@ -72,18 +72,18 @@ public class LeetCodeClient {
         Map<String, Object> variables = new HashMap<>();
         variables.put("username", username.strip());
 
-        GraphQlRequest request = new GraphQlRequest();
+        GraphQlRequestDto request = new GraphQlRequestDto();
         request.setOperationName(operationName);
         request.setQuery(query);
         request.setVariables(variables);
 
-        LeetCodeProfileResponse response;
+        LeetCodeProfileResponseDto response;
         try {
             response = webClient.post()
                     .uri("/graphql/")
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(LeetCodeProfileResponse.class)
+                    .bodyToMono(LeetCodeProfileResponseDto.class)
                     .block(Duration.ofSeconds(10));
         } catch (RuntimeException failure) {
             throw new LeetCodeClientException("Could not fetch the LeetCode profile.", failure);
@@ -99,7 +99,7 @@ public class LeetCodeClient {
             throw new LeetCodeClientException("LeetCode returned no profile data.");
         }
 
-        LeetCodeMatchedUser user = response.getData().getMatchedUser();
+        LeetCodeMatchedUserDto user = response.getData().getMatchedUser();
         if (user == null) {
             throw new LeetCodeClientException("LeetCode did not return a matching user.");
         }

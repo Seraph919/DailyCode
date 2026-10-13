@@ -26,7 +26,7 @@ public class DiscordUserDevController {
     @ApiResponse(responseCode = "400", description = "Invalid request",
             content = @Content)
     @PostMapping
-    public DiscordUserResponse register(@Valid @RequestBody RegisterDiscordUserRequest request) {
-        return DiscordUserResponse.from(service.register(request.getDiscordUserId(), request.getDiscordUsername()));
+    public DiscordUserResponseDto register(@Valid @RequestBody RegisterDiscordUserRequestDto request) {
+        return DiscordUserResponseDto.from(service.register(request.getDiscordUserId(), request.getDiscordUsername()));
     }
 }

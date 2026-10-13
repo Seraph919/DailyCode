@@ -1,6 +1,6 @@
 package com.dailycode.bot.application.leetcode;
 
-import com.dailycode.bot.application.leetcode.dto.LeetCodeLinkChallenge;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeLinkChallengeDto;
 import com.dailycode.bot.domain.leetcode.LeetCodeAccount;
 import com.dailycode.bot.domain.user.DiscordUser;
 import com.dailycode.bot.repository.DiscordUserRepository;
@@ -24,7 +24,7 @@ public class LeetCodeLinkTransaction {
     private final VerificationTokenGenerator tokenGenerator;
 
     @Transactional
-    public LeetCodeLinkChallenge createChallenge(String discordUserId, String leetcodeUsername) {
+    public LeetCodeLinkChallengeDto createChallenge(String discordUserId, String leetcodeUsername) {
         Optional<DiscordUser> existingUser = users.findByDiscordUserId(discordUserId);
         if (existingUser.isEmpty()) {
             throw new IllegalStateException("Register the Discord user before linking a LeetCode account.");
@@ -43,7 +43,7 @@ public class LeetCodeLinkTransaction {
         // The database constraints also protect against simultaneous requests.
         accounts.saveAndFlush(account);
 
-        return new LeetCodeLinkChallenge(account.getLeetcodeUsername(),
+        return new LeetCodeLinkChallengeDto(account.getLeetcodeUsername(),
                 account.getVerificationToken(), account.getVerificationExpiresAt());
     }
 }

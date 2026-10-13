@@ -1,7 +1,7 @@
 package com.dailycode.bot.application.leetcode;
 
-import com.dailycode.bot.application.leetcode.dto.LeetCodeLinkChallenge;
-import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfile;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeLinkChallengeDto;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfileDto;
 import com.dailycode.bot.leetcode.LeetCodeClient;
 import com.dailycode.bot.leetcode.LeetCodeClientException;
 import jakarta.validation.constraints.NotBlank;
@@ -18,10 +18,10 @@ public class LeetCodeLinkService {
     private final LeetCodeClient client;
     private final LeetCodeLinkTransaction linkTransaction;
 
-    public LeetCodeLinkChallenge startLink(
+    public LeetCodeLinkChallengeDto startLink(
             @NotBlank @Size(max = 20) String discordUserId,
             @NotBlank @Size(max = 100) String leetcodeUsername) {
-        LeetCodeUserProfile profile = client.fetchProfile(leetcodeUsername);
+        LeetCodeUserProfileDto profile = client.fetchProfile(leetcodeUsername);
         String returnedUsername = profile.getUsername();
         if (returnedUsername == null || returnedUsername.isBlank() || returnedUsername.length() > 100) {
             throw new LeetCodeClientException("LeetCode returned an invalid username.");

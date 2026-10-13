@@ -10,7 +10,7 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DiscordUserResponse {
+public class DiscordUserResponseDto {
 
     private Long id;
     private String discordUserId;
@@ -18,8 +18,8 @@ public class DiscordUserResponse {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public static DiscordUserResponse from(DiscordUser user) {
-        return new DiscordUserResponse(user.getId(), user.getDiscordUserId(),
+    public static DiscordUserResponseDto from(DiscordUser user) {
+        return new DiscordUserResponseDto(user.getId(), user.getDiscordUserId(),
                 user.getDiscordUsername(), user.getCreatedAt(), user.getUpdatedAt());
     }
 }

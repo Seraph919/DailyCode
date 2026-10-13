@@ -1,15 +1,17 @@
 package com.dailycode.bot.leetcode.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class GraphQlError {
+public class GraphQlRequestDto {
 
-    private String message;
+    private String operationName;
+    private String query;
+    private Map<String, Object> variables;
 }
