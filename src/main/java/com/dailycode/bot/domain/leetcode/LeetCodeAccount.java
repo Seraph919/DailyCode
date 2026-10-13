@@ -49,6 +49,9 @@ public class LeetCodeAccount {
     @Column(name = "verification_token", length = 100)
     private String verificationToken;
 
+    @Column(name = "verification_expires_at")
+    private Instant verificationExpiresAt;
+
     @Column(name = "verified_at")
     private Instant verifiedAt;
 
@@ -65,6 +68,40 @@ public class LeetCodeAccount {
         this.discordUser = discordUser;
         this.leetcodeUsername = leetcodeUsername;
         this.verified = false;
+    }
+
+    public void startVerification(String token, Instant expiresAt, Instant now) {
+        if (verified) {
+            throw new IllegalStateException("Account is already verified.");
+        }
+        if (token == null || token.isBlank() || token.length() > 100) {
+            throw new IllegalArgumentException("Verification token must contain 1 to 100 characters and not be blank.");
+        }
+        if (expiresAt == null || now == null) {
+            throw new IllegalArgumentException("Expiry and current time are required.");
+        }
+
+        // Match PostgreSQL's timestamp precision before checking the deadline.
+        Instant deadline = expiresAt.truncatedTo(ChronoUnit.MICROS);
+        if (!deadline.isAfter(now)) {
+            throw new IllegalArgumentException("Verification expiry must be in the future.");
+        }
+
+        verificationToken = token;
+        verificationExpiresAt = deadline;
+    }
+
+    public boolean hasActiveVerificationChallenge(Instant now) {
+        if (now == null) {
+            throw new IllegalArgumentException("Current time is required.");
+        }
+        if (verified) {
+            return false;
+        }
+        if (verificationToken == null || verificationToken.isBlank() || verificationExpiresAt == null) {
+            return false;
+        }
+        return verificationExpiresAt.isAfter(now);
     }
 
     @PrePersist
