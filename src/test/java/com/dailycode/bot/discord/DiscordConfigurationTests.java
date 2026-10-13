@@ -1,6 +1,8 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.user.DiscordUserService;
+import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
+import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -82,7 +84,8 @@ class DiscordConfigurationTests {
                         assertThat(context.getBean(JDA.class)).isSameAs(jda);
                         verify(builder).addEventListeners(context.getBean(DiscordReadyListener.class),
                                 context.getBean(PingCommandListener.class), context.getBean(SlashCommandRouter.class),
-                                context.getBean(DiscordUserRegistrationListener.class));
+                                context.getBean(DiscordUserRegistrationListener.class),
+                                context.getBean(LeetCodeCommandListener.class));
                         ThreadPoolTaskExecutor executor = context.getBean("discordRegistrationExecutor",
                                 ThreadPoolTaskExecutor.class);
                         registrationExecutor.set(executor);
@@ -101,6 +104,16 @@ class DiscordConfigurationTests {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class TestServices {
+
+        @Bean
+        LeetCodeVerificationService leetCodeVerificationService() {
+            return mock(LeetCodeVerificationService.class);
+        }
+
+        @Bean
+        LeetCodeLinkService leetCodeLinkService() {
+            return mock(LeetCodeLinkService.class);
+        }
 
         @Bean
         DiscordUserService discordUserService() {

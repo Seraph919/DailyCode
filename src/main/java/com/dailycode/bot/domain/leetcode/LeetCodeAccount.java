@@ -104,6 +104,23 @@ public class LeetCodeAccount {
         return verificationExpiresAt.isAfter(now);
     }
 
+    public void completeVerification(String expectedToken, Instant now) {
+        if (expectedToken == null || expectedToken.isBlank()) {
+            throw new IllegalArgumentException("The checked verification token is required.");
+        }
+        if (!hasActiveVerificationChallenge(now)) {
+            throw new IllegalStateException("Account has no active verification challenge.");
+        }
+        if (!verificationToken.equals(expectedToken)) {
+            throw new IllegalStateException("The verification challenge has changed.");
+        }
+
+        verified = true;
+        verifiedAt = now.truncatedTo(ChronoUnit.MICROS);
+        verificationToken = null;
+        verificationExpiresAt = null;
+    }
+
     @PrePersist
     private void onCreate() {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);

@@ -44,8 +44,9 @@ public class SlashCommandRouter extends ListenerAdapter {
         }
 
         ReplyCallbackAction reply;
+        SlashCommandHandler handler = null;
         try {
-            SlashCommandHandler handler = handlers.get(event.getName());
+            handler = handlers.get(event.getName());
             if (handler == null) {
                 reply = event.reply("This command is not available yet.");
                 reply.setEphemeral(true);
@@ -56,6 +57,7 @@ public class SlashCommandRouter extends ListenerAdapter {
                 }
             }
         } catch (RuntimeException failure) {
+            handler = null;
             log.error("Failed to handle /{}.", event.getName(), failure);
             // A handler must not send replies itself. Avoid a second acknowledgement if one did.
             if (event.isAcknowledged()) {
@@ -69,13 +71,14 @@ public class SlashCommandRouter extends ListenerAdapter {
                 return;
             }
         }
-        sendReply(event, reply);
+        sendReply(event, reply, handler);
     }
 
-    private void sendReply(SlashCommandInteractionEvent event, ReplyCallbackAction reply) {
+    private void sendReply(SlashCommandInteractionEvent event, ReplyCallbackAction reply,
+                           SlashCommandHandler handler) {
         try {
             String commandName = event.getName();
-            ReplySuccessLogger onSuccess = new ReplySuccessLogger(commandName);
+            ReplySuccessCallback onSuccess = new ReplySuccessCallback(event, handler);
             ReplyFailureLogger onFailure = new ReplyFailureLogger(commandName);
             reply.queue(onSuccess, onFailure);
         } catch (RuntimeException failure) {
@@ -83,17 +86,34 @@ public class SlashCommandRouter extends ListenerAdapter {
         }
     }
 
-    private class ReplySuccessLogger implements Consumer<InteractionHook> {
+    private class ReplySuccessCallback implements Consumer<InteractionHook> {
 
-        private final String commandName;
+        private final SlashCommandInteractionEvent event;
+        private final SlashCommandHandler handler;
 
-        private ReplySuccessLogger(String commandName) {
-            this.commandName = commandName;
+        private ReplySuccessCallback(SlashCommandInteractionEvent event, SlashCommandHandler handler) {
+            this.event = event;
+            this.handler = handler;
         }
 
         @Override
         public void accept(InteractionHook hook) {
+            String commandName = event.getName();
             log.debug("Replied to /{} in guild {}.", commandName, testGuildId);
+            if (handler == null) {
+                return;
+            }
+            try {
+                handler.afterAcknowledgement(event, hook);
+            } catch (RuntimeException failure) {
+                log.error("Could not start work for /{} after acknowledgement.", commandName, failure);
+                try {
+                    hook.editOriginal("Something went wrong. Please try again.")
+                            .queue(null, new ReplyFailureLogger(commandName));
+                } catch (RuntimeException replyFailure) {
+                    log.warn("Could not queue the error update for /{}.", commandName, replyFailure);
+                }
+            }
         }
     }
 

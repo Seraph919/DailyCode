@@ -1,6 +1,8 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.user.DiscordUserService;
+import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
+import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -35,6 +37,28 @@ public class DiscordConfiguration {
     }
 
     @Bean
+    public LeetCodeCommandListener leetCodeCommandListener(@Value("${discord.test-guild-id:}") String testGuildId) {
+        return new LeetCodeCommandListener(testGuildId);
+    }
+
+    @Bean
+    public ThreadPoolTaskExecutor discordLeetCodeExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(10);
+        executor.setThreadNamePrefix("discord-leetcode-");
+        return executor;
+    }
+
+    @Bean
+    public LeetCodeCommandHandler leetCodeCommandHandler(DiscordUserService users, LeetCodeLinkService links,
+            LeetCodeVerificationService verification,
+            @Qualifier("discordLeetCodeExecutor") TaskExecutor executor) {
+        return new LeetCodeCommandHandler(users, links, verification, executor);
+    }
+
+    @Bean
     public SlashCommandRouter slashCommandRouter(@Value("${discord.test-guild-id:}") String testGuildId,
                                                   List<SlashCommandHandler> handlers) {
         return new SlashCommandRouter(testGuildId, handlers);
@@ -62,14 +86,14 @@ public class DiscordConfiguration {
     @Bean(destroyMethod = "shutdown")
     public JDA jda(@Value("${discord.token:}") String token,
                    DiscordReadyListener listener, PingCommandListener pingListener, SlashCommandRouter router,
-                   DiscordUserRegistrationListener registrationListener) {
+                   DiscordUserRegistrationListener registrationListener, LeetCodeCommandListener leetCodeListener) {
         if (token.isBlank()) {
             throw new IllegalStateException("Set DISCORD_TOKEN before enabling the discord profile.");
         }
 
         return JDABuilder.createLight(token, EnumSet.noneOf(GatewayIntent.class))
                 .setEnableShutdownHook(false) // Spring owns shutdown through the bean's destroy method.
-                .addEventListeners(listener, pingListener, router, registrationListener)
+                .addEventListeners(listener, pingListener, router, registrationListener, leetCodeListener)
                 .build();
     }
 }
