@@ -1,0 +1,7 @@
+{
+  "operationName": "GetVerificationProfile",
+  "query": "query GetVerificationProfile($username: String!) { matchedUser(username: $username) { username profile { aboutMe } } }",
+  "variables": {
+    "username": "Seraph919"
+  }
+}
