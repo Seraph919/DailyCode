@@ -25,12 +25,29 @@ public class LeetCodeLinkTransaction {
 
     @Transactional
     public LeetCodeLinkChallengeDto createChallenge(String discordUserId, String leetcodeUsername) {
-        Optional<DiscordUser> existingUser = users.findByDiscordUserId(discordUserId);
+        // Lock the user even before an account exists, serializing first-link requests.
+        Optional<DiscordUser> existingUser = users.findForLinkByDiscordUserId(discordUserId);
         if (existingUser.isEmpty()) {
             throw new IllegalStateException("Register the Discord user before linking a LeetCode account.");
         }
-        if (accounts.findByDiscordUser_DiscordUserId(discordUserId).isPresent()) {
-            throw new IllegalStateException("This Discord user already has a pending or verified account link.");
+        // Share the account lock with verification, then evaluate expiry after waiting.
+        Optional<LeetCodeAccount> existingAccount = accounts.findForVerificationByDiscordUserId(discordUserId);
+        if (existingAccount.isPresent()) {
+            LeetCodeAccount account = existingAccount.get();
+            if (account.isVerified()) {
+                throw new IllegalStateException("This Discord user already has a verified account link.");
+            }
+            if (!account.getLeetcodeUsername().equalsIgnoreCase(leetcodeUsername)) {
+                throw new IllegalStateException("This Discord user has a pending link to a different LeetCode account.");
+            }
+
+            Instant now = Instant.now();
+            if (!account.hasActiveVerificationChallenge(now)) {
+                account.startVerification(tokenGenerator.generateToken(), now.plus(CHALLENGE_LIFETIME), now);
+            }
+            // A retry recovers an active token without rotating it or extending its deadline.
+            // JPA persists a renewed challenge when this transaction commits.
+            return toChallenge(account);
         }
         if (accounts.findByLeetcodeUsernameIgnoreCase(leetcodeUsername).isPresent()) {
             throw new IllegalStateException("This LeetCode username is already reserved by an account link.");
@@ -43,6 +60,10 @@ public class LeetCodeLinkTransaction {
         // The database constraints also protect against simultaneous requests.
         accounts.saveAndFlush(account);
 
+        return toChallenge(account);
+    }
+
+    private LeetCodeLinkChallengeDto toChallenge(LeetCodeAccount account) {
         return new LeetCodeLinkChallengeDto(account.getLeetcodeUsername(),
                 account.getVerificationToken(), account.getVerificationExpiresAt());
     }

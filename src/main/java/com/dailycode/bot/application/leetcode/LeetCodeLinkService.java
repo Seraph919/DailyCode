@@ -8,6 +8,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 @Service
@@ -18,6 +20,7 @@ public class LeetCodeLinkService {
     private final LeetCodeClient client;
     private final LeetCodeLinkTransaction linkTransaction;
 
+    @Transactional(propagation = Propagation.NEVER)
     public LeetCodeLinkChallengeDto startLink(
             @NotBlank @Size(max = 20) String discordUserId,
             @NotBlank @Size(max = 100) String leetcodeUsername) {

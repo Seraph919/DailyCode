@@ -13,10 +13,14 @@ public interface LeetCodeAccountRepository extends JpaRepository<LeetCodeAccount
 
     Optional<LeetCodeAccount> findByDiscordUser_DiscordUserId(String discordUserId);
 
+    // Lock only the account row: linking already holds the user lock, while
+    // verification must not acquire a user lock in the opposite order.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select account from LeetCodeAccount account
-            where account.discordUser.discordUserId = :discordUserId
+            where account.discordUser.id = (
+                select user.id from DiscordUser user where user.discordUserId = :discordUserId
+            )
             """)
     Optional<LeetCodeAccount> findForVerificationByDiscordUserId(@Param("discordUserId") String discordUserId);
 

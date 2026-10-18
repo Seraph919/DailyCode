@@ -33,7 +33,7 @@ public class LeetCodeCommandListener extends ListenerAdapter {
             }
             OptionData username = new OptionData(OptionType.STRING, "username", "Your LeetCode username", true)
                     .setMinLength(1).setMaxLength(100);
-            SubcommandData connect = new SubcommandData("connect", "Start linking your LeetCode account")
+            SubcommandData connect = new SubcommandData("connect", "Start, recover or renew your LeetCode account link")
                     .addOptions(username);
             SubcommandData verify = new SubcommandData("verify", "Verify your pending LeetCode account link");
             guild.upsertCommand(Commands.slash("leetcode", "Manage your LeetCode account link")
