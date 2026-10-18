@@ -1,5 +1,6 @@
 package com.dailycode.bot.discord;
 
+import com.dailycode.bot.application.challenge.ChallengeService;
 import com.dailycode.bot.application.user.DiscordUserService;
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
@@ -85,7 +86,8 @@ class DiscordConfigurationTests {
                         verify(builder).addEventListeners(context.getBean(DiscordReadyListener.class),
                                 context.getBean(PingCommandListener.class), context.getBean(SlashCommandRouter.class),
                                 context.getBean(DiscordUserRegistrationListener.class),
-                                context.getBean(LeetCodeCommandListener.class));
+                                context.getBean(LeetCodeCommandListener.class),
+                                context.getBean(ChallengeCommandListener.class));
                         ThreadPoolTaskExecutor executor = context.getBean("discordRegistrationExecutor",
                                 ThreadPoolTaskExecutor.class);
                         registrationExecutor.set(executor);
@@ -104,6 +106,11 @@ class DiscordConfigurationTests {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class TestServices {
+
+        @Bean
+        ChallengeService challengeService() {
+            return mock(ChallengeService.class);
+        }
 
         @Bean
         LeetCodeVerificationService leetCodeVerificationService() {
