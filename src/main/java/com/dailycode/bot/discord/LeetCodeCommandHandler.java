@@ -1,6 +1,7 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
+import com.dailycode.bot.application.leetcode.LeetCodeLinkStateException;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeLinkChallengeDto;
 import com.dailycode.bot.application.user.DiscordUserService;
@@ -91,6 +92,18 @@ public class LeetCodeCommandHandler implements SlashCommandHandler {
         }
     }
 
+    private String stateMessage(LeetCodeLinkStateException failure) {
+        return switch (failure.getReason()) {
+            case ALREADY_VERIFIED -> "Your LeetCode account is already verified.";
+            case NO_LINK -> "Connect your LeetCode account first with /leetcode connect.";
+            case INACTIVE_CHALLENGE -> "Request a new token with /leetcode connect using the same username.";
+            case DIFFERENT_ACCOUNT -> "You already have a pending link. Run /leetcode connect with that username.";
+            case USERNAME_RESERVED -> "That LeetCode account is already linked to another Discord user.";
+            case CHALLENGE_CHANGED -> "Your token has changed. Use /leetcode connect to get the current token.";
+            case PROOF_MISMATCH -> "Your ReadMe does not match the verification token. Save it on its own line, then retry /leetcode verify.";
+        };
+    }
+
     private class ReplyFailure implements Consumer<Throwable> {
         @Override
         public void accept(Throwable failure) {
@@ -111,22 +124,16 @@ public class LeetCodeCommandHandler implements SlashCommandHandler {
             try {
                 users.register(discordUserId, discordUsername);
                 LeetCodeLinkChallengeDto challenge = links.startLink(discordUserId, leetcodeUsername);
-                message = "Verification challenge ready for " + challenge.getLeetcodeUsername()
-                        + ". In your LeetCode profile's ReadMe, add this token on its own line:\n"
+                message = "Add this token on its own line in " + challenge.getLeetcodeUsername() + "'s LeetCode ReadMe:\n"
                         + "```\n" + challenge.getVerificationToken() + "\n```\n"
-                        + "Keep your existing profile text. This challenge expires <t:"
-                        + challenge.getExpiresAt().getEpochSecond() + ":R>.\n"
-                        + "Save your ReadMe, then run /leetcode verify before the deadline. Copy only the token, without the code-block formatting. "
-                        + "Run /leetcode connect with the same username to recover this token or renew it after expiry. "
-                        + "If renewed, replace the old token in ReadMe.";
+                        + "Replace any old token; keep your other text. Save, then run /leetcode verify.\n"
+                        + "Expires <t:" + challenge.getExpiresAt().getEpochSecond() + ":R>.";
+            } catch (LeetCodeLinkStateException failure) {
+                message = stateMessage(failure);
             } catch (LeetCodeClientException failure) {
                 message = "Could not read that LeetCode profile. Check the username and try again later.";
             } catch (DataIntegrityViolationException failure) {
-                message = "Could not prepare the challenge because of a database conflict. An account link may already exist. "
-                        + "Retry /leetcode connect with the same username.";
-            } catch (IllegalStateException failure) {
-                message = "Could not prepare a challenge. Use the same LeetCode username as your pending link. "
-                        + "Verified accounts cannot be linked again, and usernames reserved by another Discord user cannot be claimed.";
+                message = "Could not save your link. Retry /leetcode connect with the same username.";
             } catch (RuntimeException failure) {
                 // Exception details can contain SQL parameters, including challenge tokens.
                 log.error("Could not start a LeetCode link ({}).", failure.getClass().getSimpleName());
@@ -147,12 +154,10 @@ public class LeetCodeCommandHandler implements SlashCommandHandler {
             try {
                 verification.verify(discordUserId);
                 message = "Your LeetCode account is verified! You can now remove the verification token from your ReadMe.";
+            } catch (LeetCodeLinkStateException failure) {
+                message = stateMessage(failure);
             } catch (LeetCodeClientException failure) {
-                message = "Could not read your LeetCode profile. Please try again later while your challenge is still active.";
-            } catch (IllegalStateException failure) {
-                message = "Verification did not complete. You need a pending, unexpired link and its exact token on its own line in ReadMe. "
-                        + "Save the profile before trying again. To recover or renew a pending challenge, run /leetcode connect with the same username. "
-                        + "Already-verified accounts do not need verification again.";
+                message = "Could not read your LeetCode profile. Please try again later.";
             } catch (RuntimeException failure) {
                 log.error("Could not verify a LeetCode link ({}).", failure.getClass().getSimpleName());
                 message = "Could not complete verification. Please try again later.";

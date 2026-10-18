@@ -29,13 +29,22 @@ public class LeetCodeVerificationTransaction {
 
         Optional<LeetCodeAccount> existingAccount = accounts.findForVerificationByDiscordUserId(discordUserId);
         if (existingAccount.isEmpty()) {
-            throw new IllegalStateException("No LeetCode account link exists for this Discord user.");
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.NO_LINK);
         }
 
         LeetCodeAccount account = existingAccount.get();
+        if (account.isVerified()) {
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.ALREADY_VERIFIED);
+        }
         Instant now = Instant.now();
+        if (!account.hasActiveVerificationChallenge(now)) {
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.INACTIVE_CHALLENGE);
+        }
+        if (!expectedToken.equals(account.getVerificationToken())) {
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.CHALLENGE_CHANGED);
+        }
         if (!proofChecker.hasValidProof(account, profile, now)) {
-            throw new IllegalStateException("The profile does not prove ownership of an active challenge.");
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.PROOF_MISMATCH);
         }
 
         account.completeVerification(expectedToken, now);

@@ -4,6 +4,7 @@ import com.dailycode.bot.application.leetcode.dto.LeetCodeLinkChallengeDto;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfileDto;
 import com.dailycode.bot.leetcode.LeetCodeClient;
 import com.dailycode.bot.leetcode.LeetCodeClientException;
+import com.dailycode.bot.repository.LeetCodeAccountRepository;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +20,21 @@ public class LeetCodeLinkService {
 
     private final LeetCodeClient client;
     private final LeetCodeLinkTransaction linkTransaction;
+    private final LeetCodeAccountRepository accounts;
 
     @Transactional(propagation = Propagation.NEVER)
     public LeetCodeLinkChallengeDto startLink(
             @NotBlank @Size(max = 20) String discordUserId,
             @NotBlank @Size(max = 100) String leetcodeUsername) {
+        // Report known account state even when LeetCode is unavailable.
+        accounts.findByDiscordUser_DiscordUserId(discordUserId).ifPresent(account -> {
+            if (account.isVerified()) {
+                throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.ALREADY_VERIFIED);
+            }
+            if (!account.getLeetcodeUsername().equalsIgnoreCase(leetcodeUsername.strip())) {
+                throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.DIFFERENT_ACCOUNT);
+            }
+        });
         LeetCodeUserProfileDto profile = client.fetchProfile(leetcodeUsername);
         String returnedUsername = profile.getUsername();
         if (returnedUsername == null || returnedUsername.isBlank() || returnedUsername.length() > 100) {

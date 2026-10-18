@@ -28,12 +28,15 @@ public class LeetCodeVerificationService {
     public void verify(@NotBlank @Size(max = 20) String discordUserId) {
         Optional<LeetCodeAccount> existingAccount = accounts.findByDiscordUser_DiscordUserId(discordUserId);
         if (existingAccount.isEmpty()) {
-            throw new IllegalStateException("No LeetCode account link exists for this Discord user.");
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.NO_LINK);
         }
 
         LeetCodeAccount account = existingAccount.get();
+        if (account.isVerified()) {
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.ALREADY_VERIFIED);
+        }
         if (!account.hasActiveVerificationChallenge(Instant.now())) {
-            throw new IllegalStateException("Account has no active verification challenge.");
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.INACTIVE_CHALLENGE);
         }
 
         String username = account.getLeetcodeUsername();

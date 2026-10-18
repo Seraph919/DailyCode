@@ -35,10 +35,10 @@ public class LeetCodeLinkTransaction {
         if (existingAccount.isPresent()) {
             LeetCodeAccount account = existingAccount.get();
             if (account.isVerified()) {
-                throw new IllegalStateException("This Discord user already has a verified account link.");
+                throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.ALREADY_VERIFIED);
             }
             if (!account.getLeetcodeUsername().equalsIgnoreCase(leetcodeUsername)) {
-                throw new IllegalStateException("This Discord user has a pending link to a different LeetCode account.");
+                throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.DIFFERENT_ACCOUNT);
             }
 
             Instant now = Instant.now();
@@ -50,7 +50,7 @@ public class LeetCodeLinkTransaction {
             return toChallenge(account);
         }
         if (accounts.findByLeetcodeUsernameIgnoreCase(leetcodeUsername).isPresent()) {
-            throw new IllegalStateException("This LeetCode username is already reserved by an account link.");
+            throw new LeetCodeLinkStateException(LeetCodeLinkStateException.Reason.USERNAME_RESERVED);
         }
 
         Instant now = Instant.now();
