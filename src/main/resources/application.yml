@@ -24,6 +24,9 @@ discord:
 
 leetcode:
   base-url: https://leetcode.com
+  problem-cache:
+    ttl: PT1H
+    maximum-size: 1000
 
 springdoc:
   api-docs:

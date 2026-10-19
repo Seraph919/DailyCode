@@ -19,18 +19,21 @@ public class ProblemSyncRunner implements ApplicationRunner {
     private final ProblemSyncService syncService;
     private final String slug;
     private final boolean includePaid;
+    private final boolean forceRefresh;
 
     public ProblemSyncRunner(ProblemSyncService syncService,
                              @Value("${problem-sync.slug}") String slug,
-                             @Value("${problem-sync.include-paid:false}") boolean includePaid) {
+                             @Value("${problem-sync.include-paid:false}") boolean includePaid,
+                             @Value("${problem-sync.force-refresh:false}") boolean forceRefresh) {
         this.syncService = syncService;
         this.slug = slug;
         this.includePaid = includePaid;
+        this.forceRefresh = forceRefresh;
     }
 
     @Override
     public void run(ApplicationArguments args) {
-        ProblemSyncResultDto result = syncService.sync(slug, includePaid);
+        ProblemSyncResultDto result = syncService.sync(slug, includePaid, forceRefresh);
         log.info("Problem sync: status={}, slug={}, problemId={}.",
                 result.getStatus(), result.getTitleSlug(), result.getProblemId());
     }

@@ -82,8 +82,10 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
             throw new InvalidOptionsException("You need Manage Server permission to create a challenge.");
         }
-        return new CreateOptions(readText(event, "name", 100), readDate(event, "start_date"),
-                readDate(event, "end_date"), readText(event, "timezone", 100));
+        return new CreateOptions(readText(event, "name", 100),
+                event.getOption("start_date") == null ? null : readDate(event, "start_date"),
+                readDate(event, "end_date"),
+                event.getOption("timezone") == null ? null : readText(event, "timezone", 100));
     }
 
     private void requireServerMember(SlashCommandInteractionEvent event) {

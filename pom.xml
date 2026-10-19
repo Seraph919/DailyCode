@@ -22,6 +22,10 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
         <!-- JAVA DISCORD API -->
         <dependency>
             <groupId>net.dv8tion</groupId>

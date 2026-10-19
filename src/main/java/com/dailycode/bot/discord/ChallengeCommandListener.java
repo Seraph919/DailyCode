@@ -36,11 +36,11 @@ public class ChallengeCommandListener extends ListenerAdapter {
                     .addOptions(
                             new OptionData(OptionType.STRING, "name", "Challenge name", true)
                                     .setMinLength(1).setMaxLength(100),
-                            new OptionData(OptionType.STRING, "start_date", "First day (YYYY-MM-DD)", true)
-                                    .setMinLength(10).setMaxLength(10),
                             new OptionData(OptionType.STRING, "end_date", "Last day, inclusive (YYYY-MM-DD)", true)
                                     .setMinLength(10).setMaxLength(10),
-                            new OptionData(OptionType.STRING, "timezone", "Timezone, e.g. Africa/Casablanca", true)
+                            new OptionData(OptionType.STRING, "start_date", "First day (YYYY-MM-DD); defaults to today", false)
+                                    .setMinLength(10).setMaxLength(10),
+                            new OptionData(OptionType.STRING, "timezone", "Timezone; defaults to Africa/Casablanca", false)
                                     .setMinLength(1).setMaxLength(100));
             SubcommandData join = new SubcommandData("join", "Join a coding challenge")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)

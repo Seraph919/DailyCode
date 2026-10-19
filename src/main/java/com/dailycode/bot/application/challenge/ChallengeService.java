@@ -37,20 +37,23 @@ public class ChallengeService {
             @NotBlank @Size(max = 20) String discordGuildId,
             @NotBlank @Size(max = 20) String creatorDiscordUserId,
             @NotBlank @Size(max = 100) String name,
-            @NotNull LocalDate startDate,
+            LocalDate startDate,
             @NotNull LocalDate endDate,
-            @NotBlank @Size(max = 100) String timezone) {
+            @Size(max = 100) String timezone) {
         ZoneId zone;
         try {
-            zone = ZoneId.of(timezone.strip());
+            zone = ZoneId.of(timezone == null ? "Africa/Casablanca" : timezone.strip());
         } catch (DateTimeException failure) {
             throw new ChallengeCreationException(INVALID_TIMEZONE);
         }
-        if (endDate.isBefore(startDate)) {
+        // Resolve both defaults together so "today" follows the selected timezone.
+        LocalDate today = LocalDate.now(clock.withZone(zone));
+        LocalDate effectiveStart = startDate == null ? today : startDate;
+        if (endDate.isBefore(effectiveStart)) {
             throw new ChallengeCreationException(END_DATE_BEFORE_START);
         }
         // "Today" belongs to the challenge's timezone, not the server's timezone.
-        if (startDate.isBefore(LocalDate.now(clock.withZone(zone)))) {
+        if (effectiveStart.isBefore(today)) {
             throw new ChallengeCreationException(START_DATE_IN_PAST);
         }
 
@@ -64,7 +67,7 @@ public class ChallengeService {
             throw new ChallengeCreationException(ACCOUNT_NOT_VERIFIED);
         }
 
-        Challenge challenge = new Challenge(discordGuildId, name, creator, startDate, endDate, zone.getId());
+        Challenge challenge = new Challenge(discordGuildId, name, creator, effectiveStart, endDate, zone.getId());
         challenges.saveAndFlush(challenge);
 
         // Return plain data while the transaction still owns the managed entities.
