@@ -1,0 +1,7 @@
+{
+  "operationName": "GetProblemMetadata",
+  "query": "query GetProblemMetadata($titleSlug: String!) { question(titleSlug: $titleSlug) { questionId questionFrontendId title titleSlug difficulty isPaidOnly } }",
+  "variables": {
+    "titleSlug": "two-sum"
+  }
+}

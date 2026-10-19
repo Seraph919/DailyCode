@@ -2,9 +2,13 @@ package com.dailycode.bot.leetcode;
 
 import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfileDto;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeVerificationProfileDto;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeProblemDto;
+import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.leetcode.dto.GraphQlRequestDto;
 import com.dailycode.bot.leetcode.dto.LeetCodeMatchedUserDto;
 import com.dailycode.bot.leetcode.dto.LeetCodeProfileResponseDto;
+import com.dailycode.bot.leetcode.dto.LeetCodeProblemResponseDto;
+import com.dailycode.bot.leetcode.dto.LeetCodeQuestionDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,6 +19,19 @@ import java.util.Map;
 
 @Component
 public class LeetCodeClient {
+
+    private static final String PROBLEM_QUERY = """
+            query GetProblemMetadata($titleSlug: String!) {
+              question(titleSlug: $titleSlug) {
+                questionId
+                questionFrontendId
+                title
+                titleSlug
+                difficulty
+                isPaidOnly
+              }
+            }
+            """;
 
     private static final String PROFILE_QUERY = """
             query GetUserProfile($username: String!) {
@@ -42,6 +59,64 @@ public class LeetCodeClient {
 
     public LeetCodeClient(@Qualifier("leetCodeWebClient") WebClient webClient) {
         this.webClient = webClient;
+    }
+
+    public LeetCodeProblemDto fetchProblem(String titleSlug) {
+        if (titleSlug == null || titleSlug.strip().length() > 300
+                || !titleSlug.strip().matches("[a-z0-9]+(?:-[a-z0-9]+)*")) {
+            throw new IllegalArgumentException("Provide a valid LeetCode problem slug of at most 300 characters.");
+        }
+        String requestedSlug = titleSlug.strip();
+        GraphQlRequestDto request = new GraphQlRequestDto(
+                "GetProblemMetadata", PROBLEM_QUERY, Map.of("titleSlug", requestedSlug));
+
+        LeetCodeProblemResponseDto response;
+        try {
+            response = webClient.post()
+                    .uri("/graphql/")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(LeetCodeProblemResponseDto.class)
+                    .block(Duration.ofSeconds(10));
+        } catch (RuntimeException failure) {
+            throw new LeetCodeClientException("Could not fetch the LeetCode problem.", failure);
+        }
+
+        if (response == null) {
+            throw new LeetCodeClientException("LeetCode returned an empty response.");
+        }
+        if (response.getErrors() != null && !response.getErrors().isEmpty()) {
+            throw new LeetCodeClientException("LeetCode returned GraphQL errors.");
+        }
+        if (response.getData() == null || response.getData().getQuestion() == null) {
+            throw new LeetCodeClientException("LeetCode did not return a matching problem.");
+        }
+
+        LeetCodeQuestionDto question = response.getData().getQuestion();
+        if (!requestedSlug.equals(question.getTitleSlug())) {
+            throw new LeetCodeClientException("LeetCode returned a different problem slug.");
+        }
+        String questionId = requireProblemText(question.getQuestionId(), "question ID", 50);
+        String frontendId = requireProblemText(question.getQuestionFrontendId(), "frontend ID", 50);
+        String title = requireProblemText(question.getTitle(), "title", 300);
+        if (question.getIsPaidOnly() == null) {
+            throw new LeetCodeClientException("LeetCode returned no problem premium status.");
+        }
+        ProblemDifficulty difficulty = switch (question.getDifficulty()) {
+            case "Easy" -> ProblemDifficulty.EASY;
+            case "Medium" -> ProblemDifficulty.MEDIUM;
+            case "Hard" -> ProblemDifficulty.HARD;
+            case null, default -> throw new LeetCodeClientException("LeetCode returned an unsupported problem difficulty.");
+        };
+        return new LeetCodeProblemDto(questionId, frontendId, title, requestedSlug,
+                difficulty, question.getIsPaidOnly());
+    }
+
+    private static String requireProblemText(String value, String field, int maxLength) {
+        if (value == null || value.isBlank() || value.strip().length() > maxLength) {
+            throw new LeetCodeClientException("LeetCode returned an invalid problem " + field + ".");
+        }
+        return value.strip();
     }
 
     public LeetCodeUserProfileDto fetchProfile(String username) {
