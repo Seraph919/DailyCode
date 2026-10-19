@@ -1,6 +1,7 @@
 package com.dailycode.bot.leetcode;
 
 import io.netty.channel.ChannelOption;
+import io.netty.resolver.DefaultAddressResolverGroup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,8 @@ public class LeetCodeWebClientConfiguration {
     public WebClient leetCodeWebClient(WebClient.Builder builder,
                                       @Value("${leetcode.base-url}") String baseUrl) {
         HttpClient httpClient = HttpClient.create()
+                // Use the system/JVM resolver, including local systemd-resolved integration.
+                .resolver(DefaultAddressResolverGroup.INSTANCE)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
                 .responseTimeout(Duration.ofSeconds(5));
 

@@ -45,9 +45,12 @@ public class ChallengeCommandListener extends ListenerAdapter {
             SubcommandData join = new SubcommandData("join", "Join a coding challenge")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                             .setMinLength(1).setMaxLength(19));
+            SubcommandData today = new SubcommandData("today", "View today's assigned problem")
+                    .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
+                            .setMinLength(1).setMaxLength(19));
             guild.upsertCommand(Commands.slash("challenge", "Manage coding challenges")
                             .setDefaultPermissions(DefaultMemberPermissions.ENABLED)
-                            .addSubcommands(create, join))
+                            .addSubcommands(create, join, today))
                     .queue(new RegistrationSuccess(), new RegistrationFailure());
         } catch (RuntimeException failure) {
             log.error("Could not prepare /challenge registration ({}).", failure.getClass().getSimpleName());
@@ -57,7 +60,7 @@ public class ChallengeCommandListener extends ListenerAdapter {
     private class RegistrationSuccess implements Consumer<Command> {
         @Override
         public void accept(Command command) {
-            log.info("Registered /challenge create and /challenge join in guild {}.", testGuildId);
+            log.info("Registered /challenge create, join and today in guild {}.", testGuildId);
         }
     }
 

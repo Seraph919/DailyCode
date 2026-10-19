@@ -4,6 +4,9 @@ import com.dailycode.bot.application.challenge.ChallengeCreationException;
 import com.dailycode.bot.application.challenge.ChallengeJoinException;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeService;
+import com.dailycode.bot.application.challenge.ChallengeTodayService;
+import com.dailycode.bot.application.challenge.ChallengeTodayException;
+import com.dailycode.bot.application.challenge.dto.ChallengeTodayDto;
 import com.dailycode.bot.application.challenge.dto.ChallengeDto;
 import com.dailycode.bot.application.challenge.dto.ChallengeParticipantDto;
 import com.dailycode.bot.application.user.DiscordUserService;
@@ -15,6 +18,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.core.task.TaskRejectedException;
 
@@ -30,6 +34,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     private final DiscordUserService users;
     private final ChallengeService challenges;
     private final ChallengeJoinService joins;
+    private final ChallengeTodayService today;
     private final TaskExecutor executor;
 
     @Override
@@ -40,8 +45,8 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     @Override
     public ReplyCallbackAction handle(SlashCommandInteractionEvent event) {
         try {
-            if ("join".equals(event.getSubcommandName())) {
-                readJoinId(event);
+            if ("join".equals(event.getSubcommandName()) || "today".equals(event.getSubcommandName())) {
+                readChallengeId(event);
             } else {
                 readOptions(event);
             }
@@ -56,9 +61,12 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         Runnable task;
         try {
             if ("join".equals(event.getSubcommandName())) {
-                Long challengeId = readJoinId(event);
+                Long challengeId = readChallengeId(event);
                 task = new JoinTask(event.getGuild().getId(), event.getUser().getId(),
                         event.getUser().getName(), challengeId, hook);
+            } else if ("today".equals(event.getSubcommandName())) {
+                Long challengeId = readChallengeId(event);
+                task = new TodayTask(event.getGuild().getId(), challengeId, hook);
             } else {
                 CreateOptions options = readOptions(event);
                 task = new CreateTask(event.getGuild().getId(), event.getUser().getId(),
@@ -97,7 +105,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
     }
 
-    private Long readJoinId(SlashCommandInteractionEvent event) {
+    private Long readChallengeId(SlashCommandInteractionEvent event) {
         requireServerMember(event);
         String value = readText(event, "id", 19);
         if (value.matches("[0-9]+")) {
@@ -161,6 +169,47 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             case USER_NOT_REGISTERED -> "Your Discord registration is missing. Please try again.";
             case ACCOUNT_NOT_VERIFIED -> "Verify your LeetCode account before joining a challenge.";
         };
+    }
+
+    private String todayMessage(ChallengeTodayException failure) {
+        return switch (failure.getReason()) {
+            case CHALLENGE_NOT_FOUND -> "That challenge was not found in this server.";
+            case CHALLENGE_CANCELLED -> "This challenge has been cancelled.";
+            case CHALLENGE_COMPLETED -> "This challenge is completed.";
+            case CHALLENGE_NOT_STARTED -> "This challenge has not started yet.";
+            case CHALLENGE_ENDED -> "This challenge has ended.";
+            case NO_ASSIGNMENT -> "No problem has been assigned for today yet.";
+        };
+    }
+
+    @RequiredArgsConstructor
+    private class TodayTask implements Runnable {
+        private final String guildId;
+        private final Long challengeId;
+        private final InteractionHook hook;
+
+        @Override
+        public void run() {
+            String message;
+            try {
+                ChallengeTodayDto result = today.today(challengeId, guildId);
+                long deadline = result.getDeadline().getEpochSecond();
+                message = "Challenge #" + result.getChallengeId() + ": "
+                        + MarkdownSanitizer.escape(result.getChallengeName()) + "\n"
+                        + "Day " + result.getDayNumber() + " · " + result.getDate() + " (" + result.getTimezone() + ")\n"
+                        + MarkdownSanitizer.escape(result.getTitle()) + " (" + result.getDifficulty() + ")\n"
+                        + "https://leetcode.com/problems/" + result.getTitleSlug() + "/\n"
+                        + "Deadline: <t:" + deadline + ":F> (<t:" + deadline + ":R>)";
+            } catch (ChallengeTodayException failure) {
+                message = todayMessage(failure);
+            } catch (ConstraintViolationException failure) {
+                message = "Check the challenge ID, then try again.";
+            } catch (RuntimeException failure) {
+                log.error("Could not load today's challenge ({}).", failure.getClass().getSimpleName());
+                message = "Could not load today's problem. Please try again later.";
+            }
+            updateReply(hook, message);
+        }
     }
 
     private void updateReply(InteractionHook hook, String message) {

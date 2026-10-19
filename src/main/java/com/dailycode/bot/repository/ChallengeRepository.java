@@ -20,5 +20,9 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     @Query("select challenge from Challenge challenge where challenge.id = :id and challenge.discordGuildId = :guildId")
     Optional<Challenge> findForJoin(@Param("id") Long id, @Param("guildId") String guildId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select challenge from Challenge challenge where challenge.id = :id and challenge.discordGuildId = :guildId")
+    Optional<Challenge> findForAssignment(@Param("id") Long id, @Param("guildId") String guildId);
+
     Page<Challenge> findByDiscordGuildIdOrderByStartDateAscIdAsc(String discordGuildId, Pageable pageable);
 }
