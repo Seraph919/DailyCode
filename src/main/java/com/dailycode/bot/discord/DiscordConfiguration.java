@@ -1,6 +1,7 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.ChallengeService;
+import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.user.DiscordUserService;
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
@@ -59,8 +60,9 @@ public class DiscordConfiguration {
 
     @Bean
     public ChallengeCommandHandler challengeCommandHandler(DiscordUserService users, ChallengeService challenges,
+            ChallengeJoinService joins,
             @Qualifier("discordChallengeExecutor") TaskExecutor executor) {
-        return new ChallengeCommandHandler(users, challenges, executor);
+        return new ChallengeCommandHandler(users, challenges, joins, executor);
     }
 
     @Bean

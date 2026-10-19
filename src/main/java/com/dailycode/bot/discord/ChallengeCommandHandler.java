@@ -1,8 +1,11 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.ChallengeCreationException;
+import com.dailycode.bot.application.challenge.ChallengeJoinException;
+import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeService;
 import com.dailycode.bot.application.challenge.dto.ChallengeDto;
+import com.dailycode.bot.application.challenge.dto.ChallengeParticipantDto;
 import com.dailycode.bot.application.user.DiscordUserService;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
 
     private final DiscordUserService users;
     private final ChallengeService challenges;
+    private final ChallengeJoinService joins;
     private final TaskExecutor executor;
 
     @Override
@@ -36,7 +40,11 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     @Override
     public ReplyCallbackAction handle(SlashCommandInteractionEvent event) {
         try {
-            readOptions(event);
+            if ("join".equals(event.getSubcommandName())) {
+                readJoinId(event);
+            } else {
+                readOptions(event);
+            }
             return event.deferReply(true);
         } catch (InvalidOptionsException failure) {
             return event.reply(failure.getMessage()).setEphemeral(true);
@@ -45,14 +53,20 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
 
     @Override
     public void afterAcknowledgement(SlashCommandInteractionEvent event, InteractionHook hook) {
-        CreateOptions options;
+        Runnable task;
         try {
-            options = readOptions(event);
+            if ("join".equals(event.getSubcommandName())) {
+                Long challengeId = readJoinId(event);
+                task = new JoinTask(event.getGuild().getId(), event.getUser().getId(),
+                        event.getUser().getName(), challengeId, hook);
+            } else {
+                CreateOptions options = readOptions(event);
+                task = new CreateTask(event.getGuild().getId(), event.getUser().getId(),
+                        event.getUser().getName(), options, hook);
+            }
         } catch (InvalidOptionsException failure) {
             return; // The initial reply already explains the rejected request.
         }
-        CreateTask task = new CreateTask(event.getGuild().getId(), event.getUser().getId(),
-                event.getUser().getName(), options, hook);
         try {
             executor.execute(task);
         } catch (TaskRejectedException failure) {
@@ -61,17 +75,40 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     }
 
     private CreateOptions readOptions(SlashCommandInteractionEvent event) {
-        if (!event.isFromGuild() || event.getGuild() == null) {
-            throw new InvalidOptionsException("Use this command in a server.");
-        }
+        requireServerMember(event);
         if (!"create".equals(event.getSubcommandName())) {
             throw new InvalidOptionsException("This challenge command is not available yet.");
         }
-        if (event.getMember() == null || !event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
+        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
             throw new InvalidOptionsException("You need Manage Server permission to create a challenge.");
         }
         return new CreateOptions(readText(event, "name", 100), readDate(event, "start_date"),
                 readDate(event, "end_date"), readText(event, "timezone", 100));
+    }
+
+    private void requireServerMember(SlashCommandInteractionEvent event) {
+        if (!event.isFromGuild() || event.getGuild() == null) {
+            throw new InvalidOptionsException("Use this command in a server.");
+        }
+        if (event.getMember() == null) {
+            throw new InvalidOptionsException("Could not identify your server membership. Please try again.");
+        }
+    }
+
+    private Long readJoinId(SlashCommandInteractionEvent event) {
+        requireServerMember(event);
+        String value = readText(event, "id", 19);
+        if (value.matches("[0-9]+")) {
+            try {
+                long id = Long.parseLong(value);
+                if (id > 0) {
+                    return id;
+                }
+            } catch (NumberFormatException failure) {
+                // The value is larger than a database BIGINT.
+            }
+        }
+        throw new InvalidOptionsException("Enter a valid positive challenge ID.");
     }
 
     private String readText(SlashCommandInteractionEvent event, String name, int maxLength) {
@@ -112,6 +149,18 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         };
     }
 
+    private String joinMessage(ChallengeJoinException failure) {
+        return switch (failure.getReason()) {
+            case CHALLENGE_NOT_FOUND -> "That challenge was not found in this server.";
+            case ALREADY_JOINED -> "You already joined this challenge.";
+            case CHALLENGE_CANCELLED -> "This challenge has been cancelled.";
+            case CHALLENGE_COMPLETED -> "This challenge is completed.";
+            case CHALLENGE_ENDED -> "This challenge has ended.";
+            case USER_NOT_REGISTERED -> "Your Discord registration is missing. Please try again.";
+            case ACCOUNT_NOT_VERIFIED -> "Verify your LeetCode account before joining a challenge.";
+        };
+    }
+
     private void updateReply(InteractionHook hook, String message) {
         try {
             hook.editOriginal(message).setAllowedMentions(List.of())
@@ -139,6 +188,34 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     private static class InvalidOptionsException extends RuntimeException {
         private InvalidOptionsException(String message) {
             super(message);
+        }
+    }
+
+    @RequiredArgsConstructor
+    private class JoinTask implements Runnable {
+        private final String guildId;
+        private final String userId;
+        private final String username;
+        private final Long challengeId;
+        private final InteractionHook hook;
+
+        @Override
+        public void run() {
+            String message;
+            try {
+                users.register(userId, username);
+                ChallengeParticipantDto participant = joins.join(challengeId, guildId, userId);
+                message = "You joined challenge #" + participant.getChallengeId() + ": "
+                        + participant.getChallengeName() + ".";
+            } catch (ChallengeJoinException failure) {
+                message = joinMessage(failure);
+            } catch (ConstraintViolationException failure) {
+                message = "Check the challenge ID, then try again.";
+            } catch (RuntimeException failure) {
+                log.error("Could not join a challenge ({}).", failure.getClass().getSimpleName());
+                message = "Could not join the challenge. Please try again later.";
+            }
+            updateReply(hook, message);
         }
     }
 

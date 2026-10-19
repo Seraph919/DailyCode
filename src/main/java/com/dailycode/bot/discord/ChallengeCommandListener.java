@@ -2,7 +2,6 @@ package com.dailycode.bot.discord;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -43,9 +42,12 @@ public class ChallengeCommandListener extends ListenerAdapter {
                                     .setMinLength(10).setMaxLength(10),
                             new OptionData(OptionType.STRING, "timezone", "Timezone, e.g. Africa/Casablanca", true)
                                     .setMinLength(1).setMaxLength(100));
+            SubcommandData join = new SubcommandData("join", "Join a coding challenge")
+                    .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
+                            .setMinLength(1).setMaxLength(19));
             guild.upsertCommand(Commands.slash("challenge", "Manage coding challenges")
-                            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_SERVER))
-                            .addSubcommands(create))
+                            .setDefaultPermissions(DefaultMemberPermissions.ENABLED)
+                            .addSubcommands(create, join))
                     .queue(new RegistrationSuccess(), new RegistrationFailure());
         } catch (RuntimeException failure) {
             log.error("Could not prepare /challenge registration ({}).", failure.getClass().getSimpleName());
@@ -55,7 +57,7 @@ public class ChallengeCommandListener extends ListenerAdapter {
     private class RegistrationSuccess implements Consumer<Command> {
         @Override
         public void accept(Command command) {
-            log.info("Registered /challenge create in guild {}.", testGuildId);
+            log.info("Registered /challenge create and /challenge join in guild {}.", testGuildId);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.ChallengeService;
+import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.user.DiscordUserService;
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
@@ -106,6 +107,11 @@ class DiscordConfigurationTests {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class TestServices {
+
+        @Bean
+        ChallengeJoinService challengeJoinService() {
+            return mock(ChallengeJoinService.class);
+        }
 
         @Bean
         ChallengeService challengeService() {
