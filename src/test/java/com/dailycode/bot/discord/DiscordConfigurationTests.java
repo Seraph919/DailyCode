@@ -1,6 +1,7 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.ChallengeService;
+import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
 import com.dailycode.bot.application.user.DiscordUserService;
@@ -19,6 +20,7 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.EnumSet;
+import java.time.Clock;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,6 +110,16 @@ class DiscordConfigurationTests {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class TestServices {
+        @Bean
+        ChallengeAutomationService challengeAutomationService() {
+            return mock(ChallengeAutomationService.class);
+        }
+
+        @Bean
+        Clock clock() {
+            return Clock.systemUTC();
+        }
+
         @Bean
         ChallengeTodayService challengeTodayService() {
             return mock(ChallengeTodayService.class);

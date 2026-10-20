@@ -52,6 +52,36 @@ public class DailyChallenge {
     @Column(name = "assigned_at", nullable = false, updatable = false)
     private Instant assignedAt;
 
+    @Column(name = "announcement_attempted_at")
+    private Instant announcementAttemptedAt;
+
+    @Column(name = "announcement_channel_id", length = 20)
+    private String announcementChannelId;
+
+    @Column(name = "announcement_message_id", length = 20)
+    private String announcementMessageId;
+
+    public void claimAnnouncement(String channelId, Instant now) {
+        if (announcementAttemptedAt != null) {
+            throw new IllegalStateException("An announcement was already attempted.");
+        }
+        if (channelId == null || !channelId.matches("[0-9]{1,20}")) {
+            throw new IllegalArgumentException("A Discord channel ID is required.");
+        }
+        announcementAttemptedAt = Objects.requireNonNull(now).truncatedTo(ChronoUnit.MICROS);
+        announcementChannelId = channelId;
+    }
+
+    public void recordAnnouncement(String messageId) {
+        if (announcementAttemptedAt == null || messageId == null || !messageId.matches("[0-9]{1,20}")) {
+            throw new IllegalStateException("A claimed announcement and Discord message ID are required.");
+        }
+        if (announcementMessageId != null && !announcementMessageId.equals(messageId)) {
+            throw new IllegalStateException("The announcement has already been recorded.");
+        }
+        announcementMessageId = messageId;
+    }
+
     public DailyChallenge(Challenge challenge, Problem problem, LocalDate assignmentDate) {
         this.challenge = Objects.requireNonNull(challenge, "Challenge is required.");
         this.problem = Objects.requireNonNull(problem, "Problem is required.");

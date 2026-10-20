@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
 
@@ -23,6 +24,8 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select challenge from Challenge challenge where challenge.id = :id and challenge.discordGuildId = :guildId")
     Optional<Challenge> findForAssignment(@Param("id") Long id, @Param("guildId") String guildId);
+
+    List<Challenge> findByAnnouncementChannelIdIsNotNullAndIdGreaterThanOrderByIdAsc(Long afterId, Pageable pageable);
 
     Page<Challenge> findByDiscordGuildIdOrderByStartDateAscIdAsc(String discordGuildId, Pageable pageable);
 }

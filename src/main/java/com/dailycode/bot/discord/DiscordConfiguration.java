@@ -1,6 +1,7 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.ChallengeService;
+import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
 import com.dailycode.bot.application.user.DiscordUserService;
@@ -16,12 +17,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.time.Clock;
 import java.util.EnumSet;
 import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
 @Profile("discord")
+@EnableScheduling
 public class DiscordConfiguration {
 
     @Bean
@@ -61,9 +65,14 @@ public class DiscordConfiguration {
 
     @Bean
     public ChallengeCommandHandler challengeCommandHandler(DiscordUserService users, ChallengeService challenges,
-            ChallengeJoinService joins, ChallengeTodayService today,
+            ChallengeJoinService joins, ChallengeTodayService today, ChallengeAutomationService automation,
             @Qualifier("discordChallengeExecutor") TaskExecutor executor) {
-        return new ChallengeCommandHandler(users, challenges, joins, today, executor);
+        return new ChallengeCommandHandler(users, challenges, joins, today, automation, executor);
+    }
+
+    @Bean
+    public DailyChallengeScheduler dailyChallengeScheduler(JDA jda, ChallengeAutomationService automation, Clock clock) {
+        return new DailyChallengeScheduler(jda, automation, clock);
     }
 
     @Bean

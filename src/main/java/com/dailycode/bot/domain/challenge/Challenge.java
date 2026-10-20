@@ -1,6 +1,7 @@
 package com.dailycode.bot.domain.challenge;
 
 import com.dailycode.bot.domain.user.DiscordUser;
+import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -75,6 +76,27 @@ public class Challenge {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "announcement_channel_id", length = 20)
+    private String announcementChannelId;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "automation_difficulty", nullable = false, length = 10)
+    private ProblemDifficulty automationDifficulty = ProblemDifficulty.EASY;
+
+    public void automate(String channelId, ProblemDifficulty difficulty) {
+        if (channelId == null || !channelId.matches("[0-9]{1,20}")) {
+            throw new IllegalArgumentException("A Discord channel ID is required.");
+        }
+        Objects.requireNonNull(difficulty, "Difficulty is required.");
+        announcementChannelId = channelId;
+        automationDifficulty = difficulty;
+    }
+
+    public void stopAutomation() {
+        announcementChannelId = null;
+    }
 
     public Challenge(String discordGuildId, String name, DiscordUser createdBy,
                      LocalDate startDate, LocalDate endDate, String timezone) {

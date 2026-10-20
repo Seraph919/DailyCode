@@ -3,6 +3,7 @@ package com.dailycode.bot.discord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -48,9 +49,19 @@ public class ChallengeCommandListener extends ListenerAdapter {
             SubcommandData today = new SubcommandData("today", "View today's assigned problem")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                             .setMinLength(1).setMaxLength(19));
+            SubcommandData automate = new SubcommandData("automate", "Enable daily assignments and announcements (Manage Server)")
+                    .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
+                                    .setMinLength(1).setMaxLength(19),
+                            new OptionData(OptionType.CHANNEL, "channel", "Where to post daily problems", true)
+                                    .setChannelTypes(ChannelType.TEXT),
+                            new OptionData(OptionType.STRING, "difficulty", "Problem difficulty; defaults to Easy", false)
+                                    .addChoice("Easy", "EASY").addChoice("Medium", "MEDIUM").addChoice("Hard", "HARD"));
+            SubcommandData stop = new SubcommandData("stop-auto", "Stop automatic assignments and announcements (Manage Server)")
+                    .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
+                            .setMinLength(1).setMaxLength(19));
             guild.upsertCommand(Commands.slash("challenge", "Manage coding challenges")
                             .setDefaultPermissions(DefaultMemberPermissions.ENABLED)
-                            .addSubcommands(create, join, today))
+                            .addSubcommands(create, join, today, automate, stop))
                     .queue(new RegistrationSuccess(), new RegistrationFailure());
         } catch (RuntimeException failure) {
             log.error("Could not prepare /challenge registration ({}).", failure.getClass().getSimpleName());
@@ -60,7 +71,7 @@ public class ChallengeCommandListener extends ListenerAdapter {
     private class RegistrationSuccess implements Consumer<Command> {
         @Override
         public void accept(Command command) {
-            log.info("Registered /challenge create, join and today in guild {}.", testGuildId);
+            log.info("Registered /challenge create, join, today, automate and stop-auto in guild {}.", testGuildId);
         }
     }
 

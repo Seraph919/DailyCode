@@ -1,6 +1,9 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.ChallengeCreationException;
+import com.dailycode.bot.application.challenge.ChallengeAutomationService;
+import com.dailycode.bot.application.challenge.DailyAssignmentException;
+import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.application.challenge.ChallengeJoinException;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeService;
@@ -14,6 +17,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -35,6 +39,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     private final ChallengeService challenges;
     private final ChallengeJoinService joins;
     private final ChallengeTodayService today;
+    private final ChallengeAutomationService automation;
     private final TaskExecutor executor;
 
     @Override
@@ -47,6 +52,8 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         try {
             if ("join".equals(event.getSubcommandName()) || "today".equals(event.getSubcommandName())) {
                 readChallengeId(event);
+            } else if ("automate".equals(event.getSubcommandName()) || "stop-auto".equals(event.getSubcommandName())) {
+                readAutomationOptions(event);
             } else {
                 readOptions(event);
             }
@@ -67,6 +74,9 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             } else if ("today".equals(event.getSubcommandName())) {
                 Long challengeId = readChallengeId(event);
                 task = new TodayTask(event.getGuild().getId(), challengeId, hook);
+            } else if ("automate".equals(event.getSubcommandName()) || "stop-auto".equals(event.getSubcommandName())) {
+                AutomationOptions options = readAutomationOptions(event);
+                task = new AutomationTask(event.getGuild().getId(), options, hook);
             } else {
                 CreateOptions options = readOptions(event);
                 task = new CreateTask(event.getGuild().getId(), event.getUser().getId(),
@@ -94,6 +104,37 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 event.getOption("start_date") == null ? null : readDate(event, "start_date"),
                 readDate(event, "end_date"),
                 event.getOption("timezone") == null ? null : readText(event, "timezone", 100));
+    }
+
+    private AutomationOptions readAutomationOptions(SlashCommandInteractionEvent event) {
+        requireServerMember(event);
+        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
+            throw new InvalidOptionsException("You need Manage Server permission to change automation.");
+        }
+        Long id = readChallengeId(event);
+        if ("stop-auto".equals(event.getSubcommandName())) {
+            return new AutomationOptions(id, null, null);
+        }
+        OptionMapping option = event.getOption("channel");
+        if (option == null || option.getAsChannel().getType() != ChannelType.TEXT) {
+            throw new InvalidOptionsException("Choose a text channel in this server.");
+        }
+        var channel = option.getAsChannel().asTextChannel();
+        if (!channel.getGuild().getId().equals(event.getGuild().getId())) {
+            throw new InvalidOptionsException("Choose a text channel in this server.");
+        }
+        if (!channel.canTalk()) {
+            throw new InvalidOptionsException("I need View Channel and Send Messages permissions in that channel.");
+        }
+        ProblemDifficulty difficulty = ProblemDifficulty.EASY;
+        if (event.getOption("difficulty") != null) {
+            try {
+                difficulty = ProblemDifficulty.valueOf(readText(event, "difficulty", 10));
+            } catch (IllegalArgumentException failure) {
+                throw new InvalidOptionsException("Choose Easy, Medium, or Hard.");
+            }
+        }
+        return new AutomationOptions(id, channel.getId(), difficulty);
     }
 
     private void requireServerMember(SlashCommandInteractionEvent event) {
@@ -180,6 +221,49 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             case CHALLENGE_ENDED -> "This challenge has ended.";
             case NO_ASSIGNMENT -> "No problem has been assigned for today yet.";
         };
+    }
+
+    @RequiredArgsConstructor
+    private class AutomationTask implements Runnable {
+        private final String guildId;
+        private final AutomationOptions options;
+        private final InteractionHook hook;
+
+        @Override
+        public void run() {
+            String message;
+            try {
+                if (options.channelId == null) {
+                    automation.disable(options.challengeId, guildId);
+                    message = "Automatic assignments and announcements are off for challenge #" + options.challengeId + ".";
+                } else {
+                    automation.enable(options.challengeId, guildId, options.channelId, options.difficulty);
+                    message = "Daily assignments enabled for challenge #" + options.challengeId + " in <#"
+                            + options.channelId + "> (" + options.difficulty + ").";
+                }
+            } catch (DailyAssignmentException failure) {
+                message = switch (failure.getReason()) {
+                    case CHALLENGE_NOT_FOUND -> "That challenge was not found in this server.";
+                    case CHALLENGE_CANCELLED -> "This challenge has been cancelled.";
+                    case CHALLENGE_COMPLETED -> "This challenge is completed.";
+                    case CHALLENGE_ENDED -> "This challenge has ended.";
+                    default -> "Could not change automation. Please try again later.";
+                };
+            } catch (ConstraintViolationException failure) {
+                message = "Check the challenge ID and channel, then try again.";
+            } catch (RuntimeException failure) {
+                log.error("Could not change challenge automation ({}).", failure.getClass().getSimpleName());
+                message = "Could not change automation. Please try again later.";
+            }
+            updateReply(hook, message);
+        }
+    }
+
+    @RequiredArgsConstructor
+    private static class AutomationOptions {
+        private final Long challengeId;
+        private final String channelId;
+        private final ProblemDifficulty difficulty;
     }
 
     @RequiredArgsConstructor
