@@ -16,6 +16,10 @@ import java.util.List;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("select problem from Problem problem where problem.id = :id")
+    Optional<Problem> findForCompletion(@Param("id") Long id);
+
     Optional<Problem> findByLeetCodeQuestionId(String leetCodeQuestionId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

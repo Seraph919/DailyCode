@@ -3,22 +3,45 @@ package com.dailycode.bot.leetcode;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeUserProfileDto;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeVerificationProfileDto;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeProblemDto;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeAcceptedSubmissionDto;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeRecentSubmissionsDto;
 import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.leetcode.dto.GraphQlRequestDto;
 import com.dailycode.bot.leetcode.dto.LeetCodeMatchedUserDto;
 import com.dailycode.bot.leetcode.dto.LeetCodeProfileResponseDto;
 import com.dailycode.bot.leetcode.dto.LeetCodeProblemResponseDto;
 import com.dailycode.bot.leetcode.dto.LeetCodeQuestionDto;
+import com.dailycode.bot.leetcode.dto.LeetCodeRecentSubmissionsResponseDto;
+import com.dailycode.bot.leetcode.dto.LeetCodeSubmissionDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
+import java.time.DateTimeException;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 @Component
 public class LeetCodeClient {
+
+    private static final int RECENT_SUBMISSION_LIMIT = 20;
+    private static final String RECENT_SUBMISSIONS_QUERY = """
+            query GetRecentAcceptedSubmissions($username: String!, $limit: Int!) {
+              matchedUser(username: $username) {
+                username
+              }
+              recentAcSubmissionList(username: $username, limit: $limit) {
+                id
+                title
+                titleSlug
+                timestamp
+              }
+            }
+            """;
 
     private static final String PROBLEM_QUERY = """
             query GetProblemMetadata($titleSlug: String!) {
@@ -59,6 +82,77 @@ public class LeetCodeClient {
 
     public LeetCodeClient(@Qualifier("leetCodeWebClient") WebClient webClient) {
         this.webClient = webClient;
+    }
+
+    // A bounded recent feed, not complete submission history. Absence is not proof of failure.
+    public LeetCodeRecentSubmissionsDto fetchRecentAcceptedSubmissions(String username) {
+        if (username == null || username.isBlank() || username.strip().length() > 100) {
+            throw new IllegalArgumentException("LeetCode username must contain 1 to 100 nonblank characters.");
+        }
+        String requestedUsername = username.strip();
+        GraphQlRequestDto request = new GraphQlRequestDto("GetRecentAcceptedSubmissions",
+                RECENT_SUBMISSIONS_QUERY, Map.of("username", requestedUsername, "limit", RECENT_SUBMISSION_LIMIT));
+        LeetCodeRecentSubmissionsResponseDto response;
+        try {
+            response = webClient.post().uri("/graphql/").bodyValue(request).retrieve()
+                    .bodyToMono(LeetCodeRecentSubmissionsResponseDto.class).block(Duration.ofSeconds(10));
+        } catch (RuntimeException failure) {
+            throw new LeetCodeClientException("Could not fetch recent accepted LeetCode submissions.", failure);
+        }
+        if (response == null) {
+            throw new LeetCodeClientException("LeetCode returned an empty response.");
+        }
+        if (response.getErrors() != null && !response.getErrors().isEmpty()) {
+            throw new LeetCodeClientException("LeetCode returned GraphQL errors.");
+        }
+        var data = response.getData();
+        if (data == null || data.getMatchedUser() == null) {
+            throw new LeetCodeClientException("LeetCode did not return a matching user.");
+        }
+        String returnedUsername = data.getMatchedUser().getUsername();
+        if (!requestedUsername.equalsIgnoreCase(returnedUsername)) {
+            throw new LeetCodeClientException("LeetCode returned a different username.");
+        }
+        var submissions = data.getRecentAcSubmissionList();
+        if (submissions == null || submissions.size() > RECENT_SUBMISSION_LIMIT) {
+            throw new LeetCodeClientException("LeetCode returned an invalid recent submission list.");
+        }
+        var results = new ArrayList<LeetCodeAcceptedSubmissionDto>();
+        var seenIds = new HashSet<String>();
+        for (LeetCodeSubmissionDto submission : submissions) {
+            LeetCodeAcceptedSubmissionDto mapped = mapAcceptedSubmission(submission);
+            if (!seenIds.add(mapped.getSubmissionId())) {
+                throw new LeetCodeClientException("LeetCode returned duplicate submission IDs.");
+            }
+            results.add(mapped);
+        }
+        return new LeetCodeRecentSubmissionsDto(returnedUsername, results);
+    }
+
+    private LeetCodeAcceptedSubmissionDto mapAcceptedSubmission(LeetCodeSubmissionDto submission) {
+        if (submission == null || submission.getId() == null
+                || !submission.getId().matches("[1-9][0-9]{0,49}")) {
+            throw new LeetCodeClientException("LeetCode returned an invalid submission ID.");
+        }
+        String title = submission.getTitle();
+        if (title == null || title.isBlank() || title.length() > 300) {
+            throw new LeetCodeClientException("LeetCode returned an invalid submission title.");
+        }
+        String slug = submission.getTitleSlug();
+        if (slug == null || slug.length() > 300 || !slug.matches("[a-z0-9]+(?:-[a-z0-9]+)*")) {
+            throw new LeetCodeClientException("LeetCode returned an invalid submission problem slug.");
+        }
+        String timestamp = submission.getTimestamp();
+        if (timestamp == null || !timestamp.matches("[0-9]{1,19}")) {
+            throw new LeetCodeClientException("LeetCode returned an invalid submission timestamp.");
+        }
+        Instant submittedAt;
+        try {
+            submittedAt = Instant.ofEpochSecond(Long.parseLong(timestamp));
+        } catch (NumberFormatException | DateTimeException failure) {
+            throw new LeetCodeClientException("LeetCode returned an invalid submission timestamp.", failure);
+        }
+        return new LeetCodeAcceptedSubmissionDto(submission.getId(), title.strip(), slug, submittedAt);
     }
 
     public LeetCodeProblemDto fetchProblem(String titleSlug) {
