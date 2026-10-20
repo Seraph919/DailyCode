@@ -5,6 +5,8 @@ import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
 import com.dailycode.bot.application.challenge.DailyCompletionService;
+import com.dailycode.bot.application.challenge.AutomaticCheckTargets;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import com.dailycode.bot.application.user.DiscordUserService;
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
@@ -28,6 +30,20 @@ import java.util.List;
 @Profile("discord")
 @EnableScheduling
 public class DiscordConfiguration {
+    @Bean
+    public ThreadPoolTaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        // A slow submission scan must not block daily assignment/announcement scans.
+        scheduler.setPoolSize(2);
+        scheduler.setThreadNamePrefix("discord-scheduler-");
+        return scheduler;
+    }
+
+    @Bean
+    public SubmissionCheckScheduler submissionCheckScheduler(JDA jda, AutomaticCheckTargets targets,
+                                                              DailyCompletionService completion) {
+        return new SubmissionCheckScheduler(jda, targets, completion);
+    }
 
     @Bean
     public DiscordReadyListener discordReadyListener() {

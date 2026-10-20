@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 @Validated
@@ -22,6 +23,17 @@ import java.time.LocalDate;
 public class DailyCompletionService {
     private final DailyCompletionTransaction transaction;
     private final LeetCodeClient client;
+
+    public Optional<DailyCompletionResultDto> checkAutomatic(@NotNull @Positive Long challengeId,
+                                                            @NotBlank @Size(max = 20) String guildId,
+                                                            @NotBlank @Size(max = 20) String discordUserId,
+                                                            @NotNull LocalDate date) {
+        var prepared = transaction.prepareAutomatic(challengeId, guildId.strip(), discordUserId.strip(), date);
+        if (prepared.isEmpty()) return Optional.empty();
+        var check = prepared.get();
+        if (check.getExistingCompletion() != null) return Optional.of(check.getExistingCompletion());
+        return transaction.completeAutomatic(check, client.fetchRecentAcceptedSubmissions(check.getUsername()));
+    }
 
     public DailyCompletionResultDto checkToday(@NotNull @Positive Long challengeId,
                                                @NotBlank @Size(max = 20) String guildId,

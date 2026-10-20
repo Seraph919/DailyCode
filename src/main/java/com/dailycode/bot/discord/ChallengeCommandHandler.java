@@ -303,10 +303,10 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             try {
                 if (options.channelId == null) {
                     automation.disable(options.challengeId, guildId);
-                    message = "Automatic assignments and announcements are off for challenge #" + options.challengeId + ".";
+                    message = "Automation is off for challenge #" + options.challengeId + ".";
                 } else {
                     automation.enable(options.challengeId, guildId, options.channelId, options.difficulty);
-                    message = "Daily assignments enabled for challenge #" + options.challengeId + " in <#"
+                    message = "Daily assignments and submission checks enabled for challenge #" + options.challengeId + " in <#"
                             + options.channelId + "> (" + options.difficulty + ").";
                 }
             } catch (DailyAssignmentException failure) {

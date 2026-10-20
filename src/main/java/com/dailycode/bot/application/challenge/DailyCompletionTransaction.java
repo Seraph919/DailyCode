@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.dailycode.bot.application.challenge.DailyCompletionException.Reason.*;
 
@@ -44,14 +45,34 @@ public class DailyCompletionTransaction {
     }
 
     @Transactional
+    public Optional<DailyCompletionCheckDto> prepareAutomatic(Long challengeId, String guildId,
+                                                             String discordUserId, LocalDate date) {
+        var state = load(challengeId, guildId, discordUserId, date);
+        return automationEnabled(challengeId) ? Optional.of(state.check) : Optional.empty();
+    }
+
+    @Transactional
     public DailyCompletionResultDto complete(DailyCompletionCheckDto expected, LeetCodeRecentSubmissionsDto feed) {
+        return completeInternal(expected, feed, false).orElseThrow();
+    }
+
+    @Transactional
+    public Optional<DailyCompletionResultDto> completeAutomatic(DailyCompletionCheckDto expected,
+                                                               LeetCodeRecentSubmissionsDto feed) {
+        return completeInternal(expected, feed, true);
+    }
+
+    private Optional<DailyCompletionResultDto> completeInternal(DailyCompletionCheckDto expected,
+                                                                LeetCodeRecentSubmissionsDto feed,
+                                                                boolean automatic) {
         State current = load(expected.getChallengeId(), expected.getGuildId(),
                 expected.getDiscordUserId(), expected.getAssignmentDate());
+        if (automatic && !automationEnabled(expected.getChallengeId())) return Optional.empty();
         if (!sameTarget(expected, current.check)) {
             throw new DailyCompletionException(STATE_CHANGED);
         }
         if (current.check.getExistingCompletion() != null) {
-            return current.check.getExistingCompletion();
+            return Optional.of(current.check.getExistingCompletion());
         }
         Instant now = clock.instant();
         var accepted = eligibility.findEligible(current.check, feed, now);
@@ -63,8 +84,13 @@ public class DailyCompletionTransaction {
         }
         // No match only records PENDING; a bounded recent feed cannot establish failure.
         progress.saveAndFlush(record);
-        return result(record, current.assignment, accepted.isPresent()
-                ? DailyCompletionOutcome.COMPLETED : DailyCompletionOutcome.NO_MATCH);
+        return Optional.of(result(record, current.assignment, accepted.isPresent()
+                ? DailyCompletionOutcome.COMPLETED : DailyCompletionOutcome.NO_MATCH));
+    }
+
+    private boolean automationEnabled(Long challengeId) {
+        // load() already holds the challenge write lock; this returns the managed row.
+        return challenges.findById(challengeId).orElseThrow().getAnnouncementChannelId() != null;
     }
 
     private State load(Long challengeId, String guildId, String discordUserId, LocalDate date) {

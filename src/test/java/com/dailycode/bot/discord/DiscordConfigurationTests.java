@@ -5,6 +5,7 @@ import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
 import com.dailycode.bot.application.challenge.DailyCompletionService;
+import com.dailycode.bot.application.challenge.AutomaticCheckTargets;
 import com.dailycode.bot.application.user.DiscordUserService;
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
@@ -111,6 +112,10 @@ class DiscordConfigurationTests {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class TestServices {
+        @Bean
+        AutomaticCheckTargets automaticCheckTargets() {
+            return mock(AutomaticCheckTargets.class);
+        }
         @Bean
         DailyCompletionService dailyCompletionService() {
             return mock(DailyCompletionService.class);

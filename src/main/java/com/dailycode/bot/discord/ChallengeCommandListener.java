@@ -54,14 +54,14 @@ public class ChallengeCommandListener extends ListenerAdapter {
                                     .setMinLength(1).setMaxLength(19),
                             new OptionData(OptionType.STRING, "date", "YYYY-MM-DD; defaults to today in the challenge timezone", false)
                                     .setMinLength(10).setMaxLength(10));
-            SubcommandData automate = new SubcommandData("automate", "Enable daily assignments and announcements (Manage Server)")
+            SubcommandData automate = new SubcommandData("automate", "Enable daily problems and submission checks (Manage Server)")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                                     .setMinLength(1).setMaxLength(19),
                             new OptionData(OptionType.CHANNEL, "channel", "Where to post daily problems", true)
                                     .setChannelTypes(ChannelType.TEXT),
                             new OptionData(OptionType.STRING, "difficulty", "Problem difficulty; defaults to Easy", false)
                                     .addChoice("Easy", "EASY").addChoice("Medium", "MEDIUM").addChoice("Hard", "HARD"));
-            SubcommandData stop = new SubcommandData("stop-auto", "Stop automatic assignments and announcements (Manage Server)")
+            SubcommandData stop = new SubcommandData("stop-auto", "Stop daily problems and submission checks (Manage Server)")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                             .setMinLength(1).setMaxLength(19));
             guild.upsertCommand(Commands.slash("challenge", "Manage coding challenges")
