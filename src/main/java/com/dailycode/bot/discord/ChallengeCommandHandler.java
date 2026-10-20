@@ -3,6 +3,9 @@ package com.dailycode.bot.discord;
 import com.dailycode.bot.application.challenge.ChallengeCreationException;
 import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.DailyAssignmentException;
+import com.dailycode.bot.application.challenge.DailyCompletionService;
+import com.dailycode.bot.application.challenge.DailyCompletionException;
+import com.dailycode.bot.leetcode.LeetCodeClientException;
 import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.application.challenge.ChallengeJoinException;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
@@ -40,6 +43,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     private final ChallengeJoinService joins;
     private final ChallengeTodayService today;
     private final ChallengeAutomationService automation;
+    private final DailyCompletionService completion;
     private final TaskExecutor executor;
 
     @Override
@@ -52,6 +56,8 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         try {
             if ("join".equals(event.getSubcommandName()) || "today".equals(event.getSubcommandName())) {
                 readChallengeId(event);
+            } else if ("check".equals(event.getSubcommandName())) {
+                readCheckOptions(event);
             } else if ("automate".equals(event.getSubcommandName()) || "stop-auto".equals(event.getSubcommandName())) {
                 readAutomationOptions(event);
             } else {
@@ -74,6 +80,9 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             } else if ("today".equals(event.getSubcommandName())) {
                 Long challengeId = readChallengeId(event);
                 task = new TodayTask(event.getGuild().getId(), challengeId, hook);
+            } else if ("check".equals(event.getSubcommandName())) {
+                CheckOptions options = readCheckOptions(event);
+                task = new CheckTask(event.getGuild().getId(), event.getUser().getId(), options, hook);
             } else if ("automate".equals(event.getSubcommandName()) || "stop-auto".equals(event.getSubcommandName())) {
                 AutomationOptions options = readAutomationOptions(event);
                 task = new AutomationTask(event.getGuild().getId(), options, hook);
@@ -104,6 +113,65 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 event.getOption("start_date") == null ? null : readDate(event, "start_date"),
                 readDate(event, "end_date"),
                 event.getOption("timezone") == null ? null : readText(event, "timezone", 100));
+    }
+
+    private CheckOptions readCheckOptions(SlashCommandInteractionEvent event) {
+        Long id = readChallengeId(event);
+        LocalDate date = event.getOption("date") == null ? null : readDate(event, "date");
+        return new CheckOptions(id, date);
+    }
+
+    @RequiredArgsConstructor
+    private static class CheckOptions {
+        private final Long challengeId;
+        private final LocalDate date;
+    }
+
+    @RequiredArgsConstructor
+    private class CheckTask implements Runnable {
+        private final String guildId;
+        private final String userId;
+        private final CheckOptions options;
+        private final InteractionHook hook;
+
+        @Override
+        public void run() {
+            String message;
+            try {
+                var result = options.date == null
+                        ? completion.checkToday(options.challengeId, guildId, userId)
+                        : completion.check(options.challengeId, guildId, userId, options.date);
+                String day = "challenge #" + result.getChallengeId() + " for " + result.getAssignmentDate();
+                message = switch (result.getOutcome()) {
+                    case COMPLETED -> "You completed " + day + "!";
+                    case ALREADY_COMPLETED -> "You already completed " + day + ".";
+                    case NO_MATCH -> "No eligible recent accepted submission found for challenge #"
+                            + result.getChallengeId() + " (" + result.getAssignmentDate()
+                            + "). If you just submitted, try again shortly.";
+                };
+            } catch (DailyCompletionException failure) {
+                message = switch (failure.getReason()) {
+                    case CHALLENGE_NOT_FOUND -> "That challenge was not found in this server.";
+                    case CHALLENGE_CANCELLED -> "This challenge has been cancelled.";
+                    case DATE_OUTSIDE_CHALLENGE -> "That day is outside the challenge dates.";
+                    case DAY_NOT_STARTED -> "That challenge day has not started yet.";
+                    case NOT_JOINED -> "Join this challenge before checking a submission.";
+                    case ACCOUNT_NOT_VERIFIED -> "Verify your LeetCode account before checking a submission.";
+                    case NO_ASSIGNMENT -> "No problem has been assigned for that day yet.";
+                    case NOT_ELIGIBLE_FOR_DAY -> "You weren't eligible to participate before that day's deadline.";
+                    case STATE_CHANGED -> "Your account or challenge changed during the check. Please try again.";
+                };
+            } catch (LeetCodeClientException failure) {
+                log.warn("Could not fetch submissions for a challenge check ({}).", failure.getClass().getSimpleName());
+                message = "Couldn't check LeetCode right now. Please try again shortly.";
+            } catch (ConstraintViolationException failure) {
+                message = "Check the challenge ID and date, then try again.";
+            } catch (RuntimeException failure) {
+                log.error("Could not check challenge completion ({}).", failure.getClass().getSimpleName());
+                message = "Could not check your completion. Please try again later.";
+            }
+            updateReply(hook, message);
+        }
     }
 
     private AutomationOptions readAutomationOptions(SlashCommandInteractionEvent event) {

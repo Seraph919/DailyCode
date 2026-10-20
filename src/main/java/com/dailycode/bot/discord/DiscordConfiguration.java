@@ -4,6 +4,7 @@ import com.dailycode.bot.application.challenge.ChallengeService;
 import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
+import com.dailycode.bot.application.challenge.DailyCompletionService;
 import com.dailycode.bot.application.user.DiscordUserService;
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
@@ -66,8 +67,9 @@ public class DiscordConfiguration {
     @Bean
     public ChallengeCommandHandler challengeCommandHandler(DiscordUserService users, ChallengeService challenges,
             ChallengeJoinService joins, ChallengeTodayService today, ChallengeAutomationService automation,
+            DailyCompletionService completion,
             @Qualifier("discordChallengeExecutor") TaskExecutor executor) {
-        return new ChallengeCommandHandler(users, challenges, joins, today, automation, executor);
+        return new ChallengeCommandHandler(users, challenges, joins, today, automation, completion, executor);
     }
 
     @Bean
