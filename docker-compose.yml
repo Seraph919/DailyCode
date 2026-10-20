@@ -1,13 +1,42 @@
 name: dailycode
 
 services:
+  bot:
+    container_name: bot
+    build: .
+    restart: unless-stopped
+    stop_grace_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    environment:
+      SPRING_PROFILES_ACTIVE: discord
+      SPRING_MAIN_WEB_APPLICATION_TYPE: none
+      SPRING_JPA_SHOW_SQL: "false"
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: INFO
+      DEBUG: "false"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-dailycode}
+      DB_USER: ${DB_USER:-dailycode}
+      DB_PASSWORD: ${DB_PASSWORD:?Set in .env}
+      DISCORD_TOKEN: ${DISCORD_TOKEN:?Set in .env}
+      DISCORD_TEST_GUILD_ID: ${DISCORD_TEST_GUILD_ID:?Set in .env}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   postgres:
     container_name: dailyCode_postgres
     image: postgres:17-bookworm
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-dailycode}
       POSTGRES_USER: ${DB_USER:-dailycode}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in your local .env file}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set in .env}
     ports:
       - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
@@ -18,6 +47,11 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:

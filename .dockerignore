@@ -1,0 +1,6 @@
+# Only build inputs enter the context; credentials and local artifacts stay out.
+**
+!Dockerfile
+!pom.xml
+!src/
+!src/**
