@@ -21,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -37,12 +38,13 @@ public class ChallengeAutomationService {
     private final Clock clock;
 
     @Transactional
-    public void enable(@NotNull @Positive Long id, @NotBlank @Size(max = 20) String guildId,
+    public String enable(@NotNull @Positive Long id, @NotBlank @Size(max = 20) String guildId,
                        @NotNull @Pattern(regexp = "[0-9]{1,20}") String channelId,
-                       @NotNull ProblemDifficulty difficulty) {
+                       @NotNull ProblemDifficulty difficulty, @NotNull LocalTime time) {
         Challenge challenge = locked(id, guildId);
         checkOpen(challenge);
-        challenge.automate(channelId, difficulty);
+        challenge.automate(channelId, difficulty, time);
+        return challenge.getTimezone();
     }
 
     @Transactional
@@ -67,7 +69,20 @@ public class ChallengeAutomationService {
             return Optional.empty();
         }
         checkOpen(challenge);
+        var now = clock.instant();
+        var zone = ZoneId.of(challenge.getTimezone());
+        var today = now.atZone(zone).toLocalDate();
+        // Resolve a local wall-clock time to an instant: DST gaps shift forward,
+        // and overlaps use the first occurrence. The durable claim prevents repeats.
+        var scheduledAt = today.atTime(challenge.getAutomationTime()).atZone(zone).toInstant();
+        if (now.isBefore(scheduledAt)) {
+            return Optional.empty();
+        }
         var assignment = assignments.assignToday(id, guildId, challenge.getAutomationDifficulty());
+        if (!today.equals(assignment.getAssignmentDate())) {
+            // A lock wait crossed midnight: roll back and evaluate the new day's schedule again.
+            throw new DailyAssignmentException(DAY_CHANGED);
+        }
         DailyChallenge entity = daily.findById(assignment.getId()).orElseThrow();
         if (entity.getAnnouncementAttemptedAt() != null) {
             return Optional.empty();

@@ -31,6 +31,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.core.task.TaskRejectedException;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.Consumer;
@@ -133,7 +134,9 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                         .append("\nSaved completions: ").append(result.completed())
                         .append("\nToday · ").append(result.today()).append(" (").append(result.timezone())
                         .append("): ").append(result.todayStatus())
-                        .append("\nAutomation: ").append(result.automationEnabled() ? "Enabled" : "Disabled")
+                        .append("\nAutomation: ").append(result.automationEnabled()
+                                ? "Enabled · daily at " + result.automationTime() + " (" + result.timezone() + ")"
+                                : "Disabled")
                         .append("\n\nHistory · page ").append(page).append("/").append(result.totalPages());
                 for (var day : result.history()) {
                     // Bound user-visible titles so five rows fit Discord's message limit.
@@ -236,7 +239,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
         Long id = readChallengeId(event);
         if ("stop-auto".equals(event.getSubcommandName())) {
-            return new AutomationOptions(id, null, null);
+            return new AutomationOptions(id, null, null, null);
         }
         OptionMapping option = event.getOption("channel");
         if (option == null || option.getAsChannel().getType() != ChannelType.TEXT) {
@@ -257,7 +260,15 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 throw new InvalidOptionsException("Choose Easy, Medium, or Hard.");
             }
         }
-        return new AutomationOptions(id, channel.getId(), difficulty);
+        LocalTime time = LocalTime.MIDNIGHT;
+        if (event.getOption("time") != null) {
+            String value = event.getOption("time").getAsString().strip();
+            if (!value.matches("(?:[01][0-9]|2[0-3]):[0-5][0-9]")) {
+                throw new InvalidOptionsException("Enter time as HH:mm in 24-hour format, e.g. 00:00 for 12 AM or 12:00 for noon.");
+            }
+            time = LocalTime.parse(value);
+        }
+        return new AutomationOptions(id, channel.getId(), difficulty, time);
     }
 
     private void requireServerMember(SlashCommandInteractionEvent event) {
@@ -360,9 +371,12 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                     automation.disable(options.challengeId, guildId);
                     message = "Automation is off for challenge #" + options.challengeId + ".";
                 } else {
-                    automation.enable(options.challengeId, guildId, options.channelId, options.difficulty);
+                    String timezone = automation.enable(options.challengeId, guildId, options.channelId, options.difficulty, options.time);
                     message = "Daily assignments and submission checks enabled for challenge #" + options.challengeId + " in <#"
-                            + options.channelId + "> (" + options.difficulty + ").";
+                            + options.channelId + "> (" + options.difficulty + ")."
+                            + "\nDaily posting time: " + options.time + " (" + timezone + ")."
+                            + "\nPosts on the first scheduler check at or after that time."
+                            + " If today's time has passed, today's problem will be posted if it hasn't already been announced.";
                 }
             } catch (DailyAssignmentException failure) {
                 message = switch (failure.getReason()) {
@@ -387,6 +401,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         private final Long challengeId;
         private final String channelId;
         private final ProblemDifficulty difficulty;
+        private final LocalTime time;
     }
 
     @RequiredArgsConstructor
