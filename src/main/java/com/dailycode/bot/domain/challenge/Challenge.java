@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -85,13 +86,22 @@ public class Challenge {
     @Column(name = "automation_difficulty", nullable = false, length = 10)
     private ProblemDifficulty automationDifficulty = ProblemDifficulty.EASY;
 
-    public void automate(String channelId, ProblemDifficulty difficulty) {
+    @NotNull
+    @Column(name = "automation_time", nullable = false)
+    private LocalTime automationTime = LocalTime.MIDNIGHT;
+
+    public void automate(String channelId, ProblemDifficulty difficulty, LocalTime time) {
         if (channelId == null || !channelId.matches("[0-9]{1,20}")) {
             throw new IllegalArgumentException("A Discord channel ID is required.");
         }
         Objects.requireNonNull(difficulty, "Difficulty is required.");
+        Objects.requireNonNull(time, "Daily posting time is required.");
+        if (time.getSecond() != 0 || time.getNano() != 0) {
+            throw new IllegalArgumentException("Daily posting time must use whole minutes.");
+        }
         announcementChannelId = channelId;
         automationDifficulty = difficulty;
+        automationTime = time;
     }
 
     public void stopAutomation() {

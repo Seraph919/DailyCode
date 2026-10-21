@@ -5,7 +5,7 @@ joined. The response is private and includes:
 
 - Total recorded completions.
 - Today's status in the challenge's timezone.
-- Whether automation is enabled.
+- Whether automation is enabled, with its daily posting time and timezone.
 - Five assigned days per page, newest first, with problem titles and completion status.
 
 Use `/challenge status id:1 page:2` to see older assignments. Page defaults to 1.
@@ -25,5 +25,6 @@ After bringing this branch's changes onto OCI, rebuild and restart the bot:
 docker compose up -d --build bot
 ```
 
-The bot registers the new subcommand when it connects to Discord. No database
-migration is required.
+The bot registers the subcommand when it connects to Discord. The daily posting
+time is stored by migration V10, which runs automatically at startup. See
+[daily posting time](challenge-automation.md) for scheduling options.
