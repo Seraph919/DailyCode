@@ -1,6 +1,7 @@
 package com.dailycode.bot.repository;
 
 import com.dailycode.bot.domain.challenge.DailyProgress;
+import com.dailycode.bot.domain.challenge.DailyProgressStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface DailyProgressRepository extends JpaRepository<DailyProgress, Long> {
+
+    long countByParticipant_IdAndStatus(Long participantId,
+            DailyProgressStatus status);
 
     @Query("""
             select progress from DailyProgress progress

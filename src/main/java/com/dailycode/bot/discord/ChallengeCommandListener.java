@@ -49,6 +49,11 @@ public class ChallengeCommandListener extends ListenerAdapter {
             SubcommandData today = new SubcommandData("today", "View today's assigned problem")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                             .setMinLength(1).setMaxLength(19));
+            SubcommandData status = new SubcommandData("status", "View your saved challenge progress and history")
+                    .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
+                                    .setMinLength(1).setMaxLength(19),
+                            new OptionData(OptionType.INTEGER, "page", "History page; newest first", false)
+                                    .setMinValue(1).setMaxValue(1000000));
             SubcommandData check = new SubcommandData("check", "Check your accepted submission for a challenge day")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                                     .setMinLength(1).setMaxLength(19),
@@ -66,7 +71,7 @@ public class ChallengeCommandListener extends ListenerAdapter {
                             .setMinLength(1).setMaxLength(19));
             guild.upsertCommand(Commands.slash("challenge", "Manage coding challenges")
                             .setDefaultPermissions(DefaultMemberPermissions.ENABLED)
-                            .addSubcommands(create, join, today, automate, stop, check))
+                            .addSubcommands(create, join, today, automate, stop, check, status))
                     .queue(new RegistrationSuccess(), new RegistrationFailure());
         } catch (RuntimeException failure) {
             log.error("Could not prepare /challenge registration ({}).", failure.getClass().getSimpleName());
@@ -76,7 +81,7 @@ public class ChallengeCommandListener extends ListenerAdapter {
     private class RegistrationSuccess implements Consumer<Command> {
         @Override
         public void accept(Command command) {
-            log.info("Registered /challenge create, join, today, automate, stop-auto and check in guild {}.", testGuildId);
+            log.info("Registered /challenge create, join, today, automate, stop-auto, check and status in guild {}.", testGuildId);
         }
     }
 

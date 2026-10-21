@@ -117,6 +117,11 @@ class DiscordConfigurationTests {
             return mock(AutomaticCheckTargets.class);
         }
         @Bean
+        com.dailycode.bot.application.challenge.ChallengeProgressService challengeProgressService() {
+            return mock(com.dailycode.bot.application.challenge.ChallengeProgressService.class);
+        }
+
+        @Bean
         DailyCompletionService dailyCompletionService() {
             return mock(DailyCompletionService.class);
         }

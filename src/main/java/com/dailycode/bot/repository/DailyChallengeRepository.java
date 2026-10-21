@@ -13,6 +13,9 @@ public interface DailyChallengeRepository extends JpaRepository<DailyChallenge, 
     Optional<DailyChallenge> findByChallenge_IdAndChallenge_DiscordGuildIdAndAssignmentDate(
             Long challengeId, String guildId, LocalDate assignmentDate);
 
+    Page<DailyChallenge> findByChallenge_IdAndChallenge_DiscordGuildIdAndAssignmentDateLessThanEqualOrderByAssignmentDateDesc(
+            Long challengeId, String guildId, LocalDate date, Pageable pageable);
+
     Page<DailyChallenge> findByChallenge_IdAndChallenge_DiscordGuildIdOrderByAssignmentDateAsc(
             Long challengeId, String guildId, Pageable pageable);
 }
