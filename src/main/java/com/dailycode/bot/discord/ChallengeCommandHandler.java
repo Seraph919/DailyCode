@@ -11,6 +11,7 @@ import com.dailycode.bot.application.challenge.ChallengeJoinException;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
+import com.dailycode.bot.application.challenge.ChallengeProgressService;
 import com.dailycode.bot.application.challenge.ChallengeTodayException;
 import com.dailycode.bot.application.challenge.dto.ChallengeTodayDto;
 import com.dailycode.bot.application.challenge.dto.ChallengeDto;
@@ -44,6 +45,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     private final ChallengeTodayService today;
     private final ChallengeAutomationService automation;
     private final DailyCompletionService completion;
+    private final ChallengeProgressService progress;
     private final TaskExecutor executor;
 
     @Override
@@ -56,6 +58,9 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         try {
             if ("join".equals(event.getSubcommandName()) || "today".equals(event.getSubcommandName())) {
                 readChallengeId(event);
+            } else if ("status".equals(event.getSubcommandName())) {
+                readChallengeId(event);
+                readStatusPage(event);
             } else if ("check".equals(event.getSubcommandName())) {
                 readCheckOptions(event);
             } else if ("automate".equals(event.getSubcommandName()) || "stop-auto".equals(event.getSubcommandName())) {
@@ -80,6 +85,12 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             } else if ("today".equals(event.getSubcommandName())) {
                 Long challengeId = readChallengeId(event);
                 task = new TodayTask(event.getGuild().getId(), challengeId, hook);
+            } else if ("status".equals(event.getSubcommandName())) {
+                Long id = readChallengeId(event);
+                int page = readStatusPage(event);
+                String guild = event.getGuild().getId();
+                String user = event.getUser().getId();
+                task = () -> showStatus(id, guild, user, page, hook);
             } else if ("check".equals(event.getSubcommandName())) {
                 CheckOptions options = readCheckOptions(event);
                 task = new CheckTask(event.getGuild().getId(), event.getUser().getId(), options, hook);
@@ -99,6 +110,50 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         } catch (TaskRejectedException failure) {
             updateReply(hook, "The bot is busy. Please try again shortly.");
         }
+    }
+
+    private int readStatusPage(SlashCommandInteractionEvent event) {
+        var option = event.getOption("page");
+        long page = option == null ? 1 : option.getAsLong();
+        if (page < 1 || page > 1000000) {
+            throw new InvalidOptionsException("History page must be between 1 and 1000000.");
+        }
+        return (int) page;
+    }
+
+    private void showStatus(Long id, String guild, String user, int page, InteractionHook hook) {
+        String message;
+        try {
+            var result = progress.status(id, guild, user, page);
+            if (page > result.totalPages()) {
+                message = "That history page does not exist. Choose a page from 1 to " + result.totalPages() + ".";
+            } else {
+                var text = new StringBuilder("Challenge #").append(id).append(": ")
+                        .append(MarkdownSanitizer.escape(result.name()))
+                        .append("\nSaved completions: ").append(result.completed())
+                        .append("\nToday · ").append(result.today()).append(" (").append(result.timezone())
+                        .append("): ").append(result.todayStatus())
+                        .append("\nAutomation: ").append(result.automationEnabled() ? "Enabled" : "Disabled")
+                        .append("\n\nHistory · page ").append(page).append("/").append(result.totalPages());
+                for (var day : result.history()) {
+                    // Bound user-visible titles so five rows fit Discord's message limit.
+                    String title = day.title().length() > 70 ? day.title().substring(0, 67) + "..." : day.title();
+                    text.append("\n").append(day.date()).append(" · ")
+                            .append(MarkdownSanitizer.escape(title)).append(" — ").append(day.status());
+                }
+                if (result.history().isEmpty()) text.append("\nNo assignments yet.");
+                text.append("\n\nSaved progress only. Use /challenge check to check LeetCode now.");
+                message = text.toString();
+            }
+        } catch (DailyCompletionException failure) {
+            message = failure.getReason() == DailyCompletionException.Reason.NOT_JOINED
+                    ? "Join this challenge to view your progress."
+                    : "That challenge was not found in this server.";
+        } catch (RuntimeException failure) {
+            log.error("Could not load challenge status ({}).", failure.getClass().getSimpleName());
+            message = "Could not load your progress. Please try again shortly.";
+        }
+        updateReply(hook, message);
     }
 
     private CreateOptions readOptions(SlashCommandInteractionEvent event) {
