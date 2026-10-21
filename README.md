@@ -98,6 +98,11 @@ Choose the text channel where you want the bot to post:
 The bot posts Easy problems at midnight by default and checks participants'
 submissions. Make sure it can view the channel and send messages there.
 
+You don't need to load problems yourself. When it runs out of available problems,
+the bot fetches more from LeetCode at your chosen difficulty. It picks free
+problems and avoids repeating a problem within the same challenge. If LeetCode
+is unavailable, it retries later, so a daily post may be delayed.
+
 Both `difficulty` and `time` are optional. Choose Easy, Medium, or Hard for the
 difficulty. To set a daily posting time:
 

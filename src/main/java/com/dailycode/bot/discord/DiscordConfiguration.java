@@ -1,6 +1,7 @@
 package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.ChallengeService;
+import com.dailycode.bot.application.problem.ProblemCatalogService;
 import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
@@ -91,8 +92,9 @@ public class DiscordConfiguration {
     }
 
     @Bean
-    public DailyChallengeScheduler dailyChallengeScheduler(JDA jda, ChallengeAutomationService automation, Clock clock) {
-        return new DailyChallengeScheduler(jda, automation, clock);
+    public DailyChallengeScheduler dailyChallengeScheduler(JDA jda, ChallengeAutomationService automation, Clock clock,
+                                                           ProblemCatalogService catalog) {
+        return new DailyChallengeScheduler(jda, automation, clock, catalog);
     }
 
     @Bean

@@ -113,6 +113,11 @@ class DiscordConfigurationTests {
     @TestConfiguration(proxyBeanMethods = false)
     static class TestServices {
         @Bean
+        com.dailycode.bot.application.problem.ProblemCatalogService problemCatalogService() {
+            return mock(com.dailycode.bot.application.problem.ProblemCatalogService.class);
+        }
+
+        @Bean
         AutomaticCheckTargets automaticCheckTargets() {
             return mock(AutomaticCheckTargets.class);
         }

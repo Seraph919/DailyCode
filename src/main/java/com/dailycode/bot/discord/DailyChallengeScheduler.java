@@ -4,6 +4,7 @@ import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.DailyAssignmentException;
 import com.dailycode.bot.application.challenge.dto.AnnouncementDto;
 import com.dailycode.bot.application.challenge.dto.AutomationTargetDto;
+import com.dailycode.bot.application.problem.ProblemCatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -13,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -21,6 +23,7 @@ public class DailyChallengeScheduler {
     private final JDA jda;
     private final ChallengeAutomationService automation;
     private final Clock clock;
+    private final ProblemCatalogService catalog;
 
     @Scheduled(fixedDelayString = "${discord.automation.interval-ms:60000}", initialDelayString = "${discord.automation.initial-delay-ms:15000}")
     public void tick() {
@@ -50,7 +53,7 @@ public class DailyChallengeScheduler {
                 log.warn("Daily automation cannot access channel for challenge {}.", target.getChallengeId());
                 return;
             }
-            var prepared = automation.prepare(target.getChallengeId(), target.getGuildId(), target.getChannelId());
+            var prepared = prepareWithCatalog(target);
             if (prepared.isEmpty()) return;
             AnnouncementDto announcement = prepared.get();
             if (!clock.instant().isBefore(announcement.getAssignment().getDeadline())) {
@@ -66,7 +69,7 @@ public class DailyChallengeScheduler {
             log.info("Announced assignment {} in channel {}.", announcement.getAssignment().getId(), target.getChannelId());
         } catch (DailyAssignmentException failure) {
             if (failure.getReason() == DailyAssignmentException.Reason.NO_ELIGIBLE_PROBLEM) {
-                log.warn("Challenge {} has no unused problem at its configured difficulty; sync more problems.", target.getChallengeId());
+                log.warn("Challenge {} is waiting for an unused problem; automatic catalog fetching will retry.", target.getChallengeId());
             }
         } catch (InterruptedException failure) {
             Thread.currentThread().interrupt();
@@ -74,6 +77,19 @@ public class DailyChallengeScheduler {
             log.error("Daily automation failed for challenge {} ({}); inspect announcement state before retrying.",
                     target.getChallengeId(), failure.getClass().getSimpleName());
         }
+    }
+
+    private Optional<AnnouncementDto> prepareWithCatalog(AutomationTargetDto target) {
+        try {
+            return automation.prepare(target.getChallengeId(), target.getGuildId(), target.getChannelId());
+        } catch (DailyAssignmentException failure) {
+            if (failure.getReason() != DailyAssignmentException.Reason.NO_ELIGIBLE_PROBLEM) throw failure;
+        }
+        // The failed assignment transaction has rolled back before any network request.
+        catalog.replenish(target.getDifficulty());
+        // Recheck the current schedule, channel, lifecycle, difficulty and duplicate claim
+        // in a new transaction: an admin may have changed settings during the fetch.
+        return automation.prepare(target.getChallengeId(), target.getGuildId(), target.getChannelId());
     }
 
     private String format(AnnouncementDto value) {

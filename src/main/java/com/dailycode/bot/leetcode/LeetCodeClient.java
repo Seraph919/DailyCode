@@ -5,6 +5,8 @@ import com.dailycode.bot.application.leetcode.dto.LeetCodeVerificationProfileDto
 import com.dailycode.bot.application.leetcode.dto.LeetCodeProblemDto;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeAcceptedSubmissionDto;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeRecentSubmissionsDto;
+import com.dailycode.bot.application.leetcode.dto.LeetCodeCatalogPageDto;
+import com.dailycode.bot.leetcode.dto.LeetCodeCatalogResponseDto;
 import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.leetcode.dto.GraphQlRequestDto;
 import com.dailycode.bot.leetcode.dto.LeetCodeMatchedUserDto;
@@ -27,6 +29,19 @@ import java.util.Map;
 
 @Component
 public class LeetCodeClient {
+
+    private static final String CATALOG_QUERY = """
+            query DailyCodeCatalog($skip: Int!, $limit: Int!, $filters: QuestionListFilterInput) {
+              problemsetQuestionList: questionList(categorySlug: "", skip: $skip, limit: $limit, filters: $filters) {
+                total: totalNum
+                questions: data {
+                  titleSlug
+                  difficulty
+                  isPaidOnly
+                }
+              }
+            }
+            """;
 
     private static final int RECENT_SUBMISSION_LIMIT = 20;
     private static final String RECENT_SUBMISSIONS_QUERY = """
@@ -153,6 +168,44 @@ public class LeetCodeClient {
             throw new LeetCodeClientException("LeetCode returned an invalid submission timestamp.", failure);
         }
         return new LeetCodeAcceptedSubmissionDto(submission.getId(), title.strip(), slug, submittedAt);
+    }
+
+    public LeetCodeCatalogPageDto fetchCatalog(ProblemDifficulty difficulty, int skip, int limit) {
+        if (difficulty == null || skip < 0 || limit < 1 || limit > 50) {
+            throw new IllegalArgumentException("A difficulty, nonnegative offset and limit from 1 to 50 are required.");
+        }
+        var request = new GraphQlRequestDto("DailyCodeCatalog", CATALOG_QUERY,
+                Map.of("skip", skip, "limit", limit, "filters", Map.of("difficulty", difficulty.name())));
+        LeetCodeCatalogResponseDto response;
+        try {
+            response = webClient.post().uri("/graphql/").bodyValue(request).retrieve()
+                    .bodyToMono(LeetCodeCatalogResponseDto.class).block(Duration.ofSeconds(10));
+        } catch (RuntimeException failure) {
+            throw new LeetCodeClientException("Could not fetch the LeetCode problem catalog.", failure);
+        }
+        if (response == null || response.errors() != null && !response.errors().isEmpty()
+                || response.data() == null || response.data().problemsetQuestionList() == null) {
+            throw new LeetCodeClientException("LeetCode returned no valid problem catalog.");
+        }
+        var page = response.data().problemsetQuestionList();
+        if (page.total() == null || page.total() < 0 || page.questions() == null
+                || page.questions().size() > limit
+                || !page.questions().isEmpty() && (long) skip + page.questions().size() > page.total()
+                || page.questions().isEmpty() && skip < page.total()) {
+            throw new LeetCodeClientException("LeetCode returned invalid catalog pagination.");
+        }
+        var entries = new ArrayList<LeetCodeCatalogPageDto.Entry>();
+        var slugs = new HashSet<String>();
+        for (var question : page.questions()) {
+            if (question == null || question.titleSlug() == null || question.titleSlug().length() > 300
+                    || !question.titleSlug().matches("[a-z0-9]+(?:-[a-z0-9]+)*")
+                    || question.isPaidOnly() == null || !difficulty.name().equalsIgnoreCase(question.difficulty())
+                    || !slugs.add(question.titleSlug())) {
+                throw new LeetCodeClientException("LeetCode returned an invalid catalog entry.");
+            }
+            entries.add(new LeetCodeCatalogPageDto.Entry(question.titleSlug(), question.isPaidOnly()));
+        }
+        return new LeetCodeCatalogPageDto(page.total(), entries);
     }
 
     public LeetCodeProblemDto fetchProblem(String titleSlug) {

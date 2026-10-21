@@ -28,6 +28,8 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
 
     Optional<Problem> findByTitleSlug(String titleSlug);
 
+    boolean existsByTitleSlug(String titleSlug);
+
     Optional<Problem> findFirstByDifficultyAndPaidOnlyFalseOrderByIdAsc(ProblemDifficulty difficulty);
 
     Optional<Problem> findFirstByDifficultyAndPaidOnlyFalseAndIdNotInOrderByIdAsc(

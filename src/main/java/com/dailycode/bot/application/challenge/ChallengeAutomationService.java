@@ -59,7 +59,8 @@ public class ChallengeAutomationService {
     }
 
     private AutomationTargetDto target(Challenge challenge) {
-        return new AutomationTargetDto(challenge.getId(), challenge.getDiscordGuildId(), challenge.getAnnouncementChannelId());
+        return new AutomationTargetDto(challenge.getId(), challenge.getDiscordGuildId(),
+                challenge.getAnnouncementChannelId(), challenge.getAutomationDifficulty());
     }
 
     @Transactional
