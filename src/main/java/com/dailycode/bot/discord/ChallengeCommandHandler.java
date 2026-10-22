@@ -239,7 +239,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
         Long id = readChallengeId(event);
         if ("stop-auto".equals(event.getSubcommandName())) {
-            return new AutomationOptions(id, null, null, null);
+            return new AutomationOptions(id, null, null, null, null);
         }
         OptionMapping option = event.getOption("channel");
         if (option == null || option.getAsChannel().getType() != ChannelType.TEXT) {
@@ -251,6 +251,18 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
         if (!channel.canTalk()) {
             throw new InvalidOptionsException("I need View Channel and Send Messages permissions in that channel.");
+        }
+        String roleId = null;
+        OptionMapping roleOption = event.getOption("role");
+        if (roleOption != null) {
+            var role = roleOption.getAsRole();
+            if (!role.getGuild().getId().equals(event.getGuild().getId()) || role.isPublicRole()) {
+                throw new InvalidOptionsException("Choose a role in this server other than @everyone.");
+            }
+            if (!role.isMentionable() && !event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE)) {
+                throw new InvalidOptionsException("Make that role mentionable or give me Mention Everyone permission in that channel.");
+            }
+            roleId = role.getId();
         }
         ProblemDifficulty difficulty = ProblemDifficulty.EASY;
         if (event.getOption("difficulty") != null) {
@@ -268,7 +280,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             }
             time = LocalTime.parse(value);
         }
-        return new AutomationOptions(id, channel.getId(), difficulty, time);
+        return new AutomationOptions(id, channel.getId(), difficulty, time, roleId);
     }
 
     private void requireServerMember(SlashCommandInteractionEvent event) {
@@ -371,10 +383,12 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                     automation.disable(options.challengeId, guildId);
                     message = "Automation is off for challenge #" + options.challengeId + ".";
                 } else {
-                    String timezone = automation.enable(options.challengeId, guildId, options.channelId, options.difficulty, options.time);
+                    String timezone = automation.enable(options.challengeId, guildId, options.channelId,
+                            options.difficulty, options.time, options.roleId);
                     message = "Daily assignments and submission checks enabled for challenge #" + options.challengeId + " in <#"
                             + options.channelId + "> (" + options.difficulty + ")."
                             + "\nDaily posting time: " + options.time + " (" + timezone + ")."
+                            + "\nRole mention: " + (options.roleId == null ? "None." : "<@&" + options.roleId + ">.")
                             + "\nPosts on the first scheduler check at or after that time."
                             + " If today's time has passed, today's problem will be posted if it hasn't already been announced.";
                 }
@@ -402,6 +416,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         private final String channelId;
         private final ProblemDifficulty difficulty;
         private final LocalTime time;
+        private final String roleId;
     }
 
     @RequiredArgsConstructor

@@ -40,10 +40,11 @@ public class ChallengeAutomationService {
     @Transactional
     public String enable(@NotNull @Positive Long id, @NotBlank @Size(max = 20) String guildId,
                        @NotNull @Pattern(regexp = "[0-9]{1,20}") String channelId,
-                       @NotNull ProblemDifficulty difficulty, @NotNull LocalTime time) {
+                       @NotNull ProblemDifficulty difficulty, @NotNull LocalTime time,
+                       @Pattern(regexp = "[0-9]{1,20}") String roleId) {
         Challenge challenge = locked(id, guildId);
         checkOpen(challenge);
-        challenge.automate(channelId, difficulty, time);
+        challenge.automate(channelId, difficulty, time, roleId);
         return challenge.getTimezone();
     }
 
@@ -93,7 +94,8 @@ public class ChallengeAutomationService {
         }
         entity.claimAnnouncement(expectedChannel, clock.instant());
         daily.flush();
-        return Optional.of(new AnnouncementDto(challenge.getName(), guildId, expectedChannel, assignment));
+        return Optional.of(new AnnouncementDto(challenge.getName(), guildId, expectedChannel,
+                challenge.getAnnouncementRoleId(), assignment));
     }
 
     @Transactional

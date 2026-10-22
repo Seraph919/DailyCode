@@ -9,5 +9,6 @@ public class AnnouncementDto {
     private final String challengeName;
     private final String guildId;
     private final String channelId;
+    private final String roleId;
     private final DailyAssignmentDto assignment;
 }
