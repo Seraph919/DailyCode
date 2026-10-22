@@ -67,7 +67,8 @@ public class ChallengeCommandListener extends ListenerAdapter {
                             new OptionData(OptionType.STRING, "difficulty", "Problem difficulty; defaults to Easy", false)
                                     .addChoice("Easy", "EASY").addChoice("Medium", "MEDIUM").addChoice("Hard", "HARD"),
                             new OptionData(OptionType.STRING, "time", "Daily posting time HH:mm (24-hour), challenge timezone; defaults to 00:00", false)
-                                    .setMinLength(5).setMaxLength(5));
+                                    .setMinLength(5).setMaxLength(5),
+                            new OptionData(OptionType.ROLE, "role", "Role to mention in daily posts; omit for no mention", false));
             SubcommandData stop = new SubcommandData("stop-auto", "Stop daily problems and submission checks (Manage Server)")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                             .setMinLength(1).setMaxLength(19));

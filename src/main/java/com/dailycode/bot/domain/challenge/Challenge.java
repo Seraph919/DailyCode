@@ -81,6 +81,9 @@ public class Challenge {
     @Column(name = "announcement_channel_id", length = 20)
     private String announcementChannelId;
 
+    @Column(name = "announcement_role_id", length = 20)
+    private String announcementRoleId;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "automation_difficulty", nullable = false, length = 10)
@@ -90,7 +93,7 @@ public class Challenge {
     @Column(name = "automation_time", nullable = false)
     private LocalTime automationTime = LocalTime.MIDNIGHT;
 
-    public void automate(String channelId, ProblemDifficulty difficulty, LocalTime time) {
+    public void automate(String channelId, ProblemDifficulty difficulty, LocalTime time, String roleId) {
         if (channelId == null || !channelId.matches("[0-9]{1,20}")) {
             throw new IllegalArgumentException("A Discord channel ID is required.");
         }
@@ -99,7 +102,11 @@ public class Challenge {
         if (time.getSecond() != 0 || time.getNano() != 0) {
             throw new IllegalArgumentException("Daily posting time must use whole minutes.");
         }
+        if (roleId != null && !roleId.matches("[0-9]{1,20}")) {
+            throw new IllegalArgumentException("A valid Discord role ID is required.");
+        }
         announcementChannelId = channelId;
+        announcementRoleId = roleId;
         automationDifficulty = difficulty;
         automationTime = time;
     }

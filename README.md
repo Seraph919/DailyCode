@@ -123,6 +123,20 @@ Repeat `/challenge automate` to change the settings, including the difficulty
 and time you want to use. Changing the schedule won't post a second problem for
 the same day.
 
+To mention a role's members with each daily problem, add the optional `role`:
+
+```text
+/challenge automate id:1 channel:#daily-challenges role:@Coders
+```
+
+The role must be mentionable, or the bot must have **Mention Everyone** permission
+in the posting channel. Choose a server role other than `@everyone`. Members'
+Discord notification settings still apply.
+
+Leaving out `role` sends posts without a role mention. To remove an existing role
+mention, run `/challenge automate` again without `role`, including the difficulty
+and time you want to keep.
+
 ### Stop automation
 
 ```text
