@@ -25,7 +25,7 @@ class DiscordUserRegistrationListenerTests {
     private final DiscordUserService service = mock(DiscordUserService.class);
     private final TaskExecutor executor = mock(TaskExecutor.class);
     private final DiscordUserRegistrationListener listener =
-            new DiscordUserRegistrationListener(GUILD_ID, service, executor);
+            new DiscordUserRegistrationListener(service, executor);
 
     @Test
     void queuesIdentityFromTheEventWithoutDoingDatabaseWorkOnTheEventThread(CapturedOutput output) {
@@ -82,10 +82,13 @@ class DiscordUserRegistrationListenerTests {
     }
 
     @Test
-    void ignoresOtherGuilds() {
+    void registersUsersFromAnotherGuild() {
         listener.onSlashCommandInteraction(event("111111111111111111", "alice"));
 
-        verifyNoInteractions(executor, service);
+        ArgumentCaptor<Runnable> task = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).execute(task.capture());
+        task.getValue().run();
+        verify(service).register(USER_ID, "alice");
     }
 
     @Test

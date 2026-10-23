@@ -14,12 +14,10 @@ import java.util.function.Consumer;
 @Slf4j
 public class SlashCommandRouter extends ListenerAdapter {
 
-    private final String testGuildId;
     private final Map<String, SlashCommandHandler> handlers;
 
-    public SlashCommandRouter(String testGuildId, List<SlashCommandHandler> commandHandlers)
+    public SlashCommandRouter(List<SlashCommandHandler> commandHandlers)
     {
-        this.testGuildId = testGuildId;
         Map<String, SlashCommandHandler> registered = new HashMap<>();
         for (SlashCommandHandler handler : commandHandlers) {
             String commandName = handler.name();
@@ -34,9 +32,6 @@ public class SlashCommandRouter extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
-            return;
-        }
-        if (!testGuildId.equals(event.getGuild().getId())) {
             return;
         }
         if (event.isAcknowledged()) {
@@ -99,7 +94,7 @@ public class SlashCommandRouter extends ListenerAdapter {
         @Override
         public void accept(InteractionHook hook) {
             String commandName = event.getName();
-            log.debug("Replied to /{} in guild {}.", commandName, testGuildId);
+            log.debug("Replied to /{} in guild {}.", commandName, event.getGuild().getId());
             if (handler == null) {
                 return;
             }

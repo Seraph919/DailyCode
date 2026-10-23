@@ -13,16 +13,12 @@ import org.springframework.core.task.TaskRejectedException;
 @RequiredArgsConstructor
 public class DiscordUserRegistrationListener extends ListenerAdapter {
 
-    private final String testGuildId;
     private final DiscordUserService userService;
     private final TaskExecutor registrationExecutor;
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (!event.isFromGuild()) {
-            return;
-        }
-        if (!testGuildId.equals(event.getGuild().getId())) {
             return;
         }
 

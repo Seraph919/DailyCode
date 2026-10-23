@@ -32,7 +32,7 @@ class DiscordUserRegistrationPersistenceTests {
         String guildId = "1260299157571239936";
         // Only in this test: run inline to keep writes inside the rolled-back test transaction.
         DiscordUserRegistrationListener listener =
-                new DiscordUserRegistrationListener(guildId, service, new SyncTaskExecutor());
+                new DiscordUserRegistrationListener(service, new SyncTaskExecutor());
         SlashCommandInteractionEvent event = mock(SlashCommandInteractionEvent.class);
         Guild guild = mock(Guild.class);
         User user = mock(User.class);

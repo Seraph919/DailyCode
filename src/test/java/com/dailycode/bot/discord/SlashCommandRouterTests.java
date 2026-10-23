@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 class SlashCommandRouterTests {
 
     private static final String GUILD_ID = "1260299157571239936";
-    private final SlashCommandRouter router = new SlashCommandRouter(GUILD_ID, List.of(new PingCommandHandler()));
+    private final SlashCommandRouter router = new SlashCommandRouter(List.of(new PingCommandHandler()));
 
     @Test
     void routesPingToItsHandlerAndQueuesOneReply() {
@@ -44,7 +44,7 @@ class SlashCommandRouterTests {
         ReplyCallbackAction reply = mock(ReplyCallbackAction.class);
         when(second.handle(event)).thenReturn(reply);
 
-        new SlashCommandRouter(GUILD_ID, List.of(first, second)).onSlashCommandInteraction(event);
+        new SlashCommandRouter(List.of(first, second)).onSlashCommandInteraction(event);
 
         verify(second).handle(event);
         verify(first, never()).handle(any());
@@ -70,7 +70,7 @@ class SlashCommandRouterTests {
         when(handler.handle(event)).thenThrow(new IllegalStateException("Internal database detail"));
         ReplyCallbackAction reply = reply(event, "Something went wrong. Please try again.");
 
-        new SlashCommandRouter(GUILD_ID, List.of(handler)).onSlashCommandInteraction(event);
+        new SlashCommandRouter(List.of(handler)).onSlashCommandInteraction(event);
 
         verify(event).reply("Something went wrong. Please try again.");
         verify(event, never()).reply("Internal database detail");
@@ -82,7 +82,7 @@ class SlashCommandRouterTests {
     @Test
     void rejectsDuplicateHandlerNames() {
         try {
-            new SlashCommandRouter(GUILD_ID, List.of(new PingCommandHandler(), new PingCommandHandler()));
+            new SlashCommandRouter(List.of(new PingCommandHandler(), new PingCommandHandler()));
             fail("Expected duplicate handler names to be rejected");
         } catch (IllegalStateException exception) {
             assertThat(exception).hasMessage("Duplicate slash command handler: ping");
@@ -90,12 +90,14 @@ class SlashCommandRouterTests {
     }
 
     @Test
-    void ignoresOtherGuilds() {
+    void routesCommandsFromAnotherGuild() {
         SlashCommandInteractionEvent event = event("ping", "111111111111111111");
+        ReplyCallbackAction reply = reply(event, "Pong!");
 
         router.onSlashCommandInteraction(event);
 
-        verify(event, never()).reply(anyString());
+        verify(event).reply("Pong!");
+        verify(reply).queue(any(), any());
     }
 
     @Test
@@ -125,7 +127,7 @@ class SlashCommandRouterTests {
         when(handler.name()).thenReturn("broken");
         when(handler.handle(event)).thenThrow(new IllegalStateException("Handler violated reply ownership"));
 
-        new SlashCommandRouter(GUILD_ID, List.of(handler)).onSlashCommandInteraction(event);
+        new SlashCommandRouter(List.of(handler)).onSlashCommandInteraction(event);
 
         verify(event, never()).reply(anyString());
     }
