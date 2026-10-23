@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Optional;
 
@@ -69,6 +70,52 @@ class ChallengeTodayServiceTests {
                 .isInstanceOf(ChallengeTodayException.class)
                 .extracting("reason")
                 .isEqualTo(NO_ASSIGNMENT);
+    }
+
+    @Test
+    void midnightUsesTheNewDayAndExplainsTheUpcomingScheduledPost() {
+        var zone = ZoneId.of("Africa/Casablanca");
+        var previousDate = LocalDate.of(2026, 10, 23);
+        challenge = new Challenge("100", "Sprint", creator, previousDate.minusDays(3),
+                previousDate.plusDays(20), zone.getId());
+        challenge.automate("200", ProblemDifficulty.EASY, LocalTime.of(11, 0), null);
+        when(challenges.findByIdAndDiscordGuildId(1L, "100")).thenReturn(Optional.of(challenge));
+        when(assignments.findByChallenge_IdAndChallenge_DiscordGuildIdAndAssignmentDate(1L, "100", previousDate))
+                .thenReturn(Optional.of(new DailyChallenge(challenge, problem, previousDate)));
+        var midnight = previousDate.plusDays(1).atStartOfDay(zone).toInstant();
+        var beforeMidnight = new ChallengeTodayService(challenges, assignments,
+                Clock.fixed(midnight.minusSeconds(1), zone));
+        assertThat(beforeMidnight.today(1L, "100").getDeadline()).isEqualTo(midnight);
+
+        var afterMidnight = new ChallengeTodayService(challenges, assignments,
+                Clock.fixed(midnight.plusSeconds(8 * 60), zone));
+        assertThatThrownBy(() -> afterMidnight.today(1L, "100"))
+                .isInstanceOfSatisfying(ChallengeTodayException.class, failure -> {
+                    assertThat(failure.getReason()).isEqualTo(NO_ASSIGNMENT);
+                    assertThat(failure.getSchedule().date()).isEqualTo(previousDate.plusDays(1));
+                    assertThat(failure.getSchedule().timezone()).isEqualTo(zone.getId());
+                    assertThat(failure.getSchedule().postingAt()).isEqualTo(
+                            previousDate.plusDays(1).atTime(11, 0).atZone(zone).toInstant());
+                    assertThat(failure.getSchedule().postingTimePassed()).isFalse();
+                });
+        verify(assignments, never()).save(any());
+    }
+
+    @Test
+    void missingAssignmentAfterPostingTimeIncludesThePastSchedule() {
+        challenge.automate("200", ProblemDifficulty.EASY, LocalTime.of(11, 0), null);
+        assertThatThrownBy(() -> service.today(1L, "100"))
+                .isInstanceOfSatisfying(ChallengeTodayException.class, failure -> {
+                    assertThat(failure.getSchedule().postingAt()).isEqualTo(Instant.parse("2026-10-23T11:00:00Z"));
+                    assertThat(failure.getSchedule().postingTimePassed()).isTrue();
+                });
+    }
+
+    @Test
+    void missingAssignmentWithAutomationOffHasNoPromisedPostingTime() {
+        assertThatThrownBy(() -> service.today(1L, "100"))
+                .isInstanceOfSatisfying(ChallengeTodayException.class, failure ->
+                        assertThat(failure.getSchedule().postingAt()).isNull());
     }
 
     @Test

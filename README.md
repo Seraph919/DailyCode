@@ -33,6 +33,15 @@ You need a verified LeetCode account to join. To see today's problem and deadlin
 Open the problem link and submit your solution on LeetCode using your linked
 account. Aim for an **Accepted** result before the displayed deadline.
 
+`/challenge today` replies privately with a problem card and Join Challenge,
+View Status, and LeetCode Problem buttons. It reads the current assignment;
+it does not create a problem or change the posting schedule.
+
+Each day ends at midnight in the challenge's timezone. If you ask after midnight
+but before the next scheduled post, yesterday's problem has expired and today's
+problem may not be assigned yet. The waiting card shows the challenge date,
+timezone, and scheduled posting time, or explains that automation is disabled.
+
 ## Check your completion
 
 With automation enabled, the bot checks submissions about every five minutes.
@@ -44,6 +53,8 @@ You can also ask it to check now:
 
 If you just submitted and the bot hasn't found it yet, wait a little and try
 again. The bot checks recent accepted submissions, so it may not find older work.
+The private result card shows whether completion was recorded, already recorded,
+or no eligible submission was found, with a View Status button.
 
 To check a particular challenge day, add its date:
 

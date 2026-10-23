@@ -28,6 +28,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.core.task.TaskRejectedException;
 
@@ -247,14 +248,8 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 var result = options.date == null
                         ? completion.checkToday(options.challengeId, guildId, userId)
                         : completion.check(options.challengeId, guildId, userId, options.date);
-                String day = "challenge #" + result.getChallengeId() + " for " + result.getAssignmentDate();
-                message = switch (result.getOutcome()) {
-                    case COMPLETED -> "You completed " + day + "!";
-                    case ALREADY_COMPLETED -> "You already completed " + day + ".";
-                    case NO_MATCH -> "No eligible recent accepted submission found for challenge #"
-                            + result.getChallengeId() + " (" + result.getAssignmentDate()
-                            + "). If you just submitted, try again shortly.";
-                };
+                updateCard(hook, ChallengeReplyMessage.check(result));
+                return;
             } catch (DailyCompletionException failure) {
                 message = switch (failure.getReason()) {
                     case CHALLENGE_NOT_FOUND -> "That challenge was not found in this server.";
@@ -276,7 +271,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 log.error("Could not check challenge completion ({}).", failure.getClass().getSimpleName());
                 message = "Could not check your completion. Please try again later.";
             }
-            updateReply(hook, message);
+            updateCard(hook, ChallengeReplyMessage.notice("Unable to check submission", message));
         }
     }
 
@@ -481,14 +476,13 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             String message;
             try {
                 ChallengeTodayDto result = today.today(challengeId, guildId);
-                long deadline = result.getDeadline().getEpochSecond();
-                message = "Challenge #" + result.getChallengeId() + ": "
-                        + MarkdownSanitizer.escape(result.getChallengeName()) + "\n"
-                        + "Day " + result.getDayNumber() + " · " + result.getDate() + " (" + result.getTimezone() + ")\n"
-                        + MarkdownSanitizer.escape(result.getTitle()) + " (" + result.getDifficulty() + ")\n"
-                        + "https://leetcode.com/problems/" + result.getTitleSlug() + "/\n"
-                        + "Deadline: <t:" + deadline + ":F> (<t:" + deadline + ":R>)";
+                updateCard(hook, ChallengeReplyMessage.today(result));
+                return;
             } catch (ChallengeTodayException failure) {
+                if (failure.getReason() == ChallengeTodayException.Reason.NO_ASSIGNMENT) {
+                    updateCard(hook, ChallengeReplyMessage.waiting(challengeId, failure.getSchedule()));
+                    return;
+                }
                 message = todayMessage(failure);
             } catch (ConstraintViolationException failure) {
                 message = "Check the challenge ID, then try again.";
@@ -496,7 +490,15 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 log.error("Could not load today's challenge ({}).", failure.getClass().getSimpleName());
                 message = "Could not load today's problem. Please try again later.";
             }
-            updateReply(hook, message);
+            updateCard(hook, ChallengeReplyMessage.notice("Today’s challenge", message));
+        }
+    }
+
+    private void updateCard(InteractionHook hook, MessageEditData message) {
+        try {
+            hook.editOriginal(message).queue(null, new ReplyFailure());
+        } catch (RuntimeException failure) {
+            log.warn("Could not queue the challenge card ({}).", failure.getClass().getSimpleName());
         }
     }
 
