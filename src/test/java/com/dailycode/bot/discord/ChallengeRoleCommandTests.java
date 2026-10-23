@@ -51,6 +51,7 @@ class ChallengeRoleCommandTests {
         when(channel.getGuild()).thenReturn(guild);
         when(channel.getId()).thenReturn("200");
         when(channel.canTalk()).thenReturn(true);
+        when(bot.hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)).thenReturn(true);
         when(role.getGuild()).thenReturn(guild);
         when(role.getId()).thenReturn("300");
         when(role.isMentionable()).thenReturn(true);
@@ -107,6 +108,14 @@ class ChallengeRoleCommandTests {
         when(bot.hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE)).thenReturn(true);
         acceptAndRun();
         verify(automation).enable(1L, "100", "200", ProblemDifficulty.EASY, LocalTime.MIDNIGHT, "300");
+    }
+
+    @Test
+    void rejectsChannelWithoutEmbedPermission() {
+        when(bot.hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)).thenReturn(false);
+        handler.handle(event);
+        verify(event).reply("I need Embed Links permission in that channel to post challenge cards.");
+        verify(event, never()).deferReply(anyBoolean());
     }
 
     private void selectRole() {

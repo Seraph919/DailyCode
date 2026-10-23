@@ -8,14 +8,11 @@ import com.dailycode.bot.application.problem.ProblemCatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
-import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
-import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.Clock;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +48,8 @@ public class DailyChallengeScheduler {
             var guild = jda.getGuildById(target.getGuildId());
             TextChannel channel = guild == null ? null : guild.getTextChannelById(target.getChannelId());
             // No claim is consumed when the bot is offline or cannot access the channel.
-            if (channel == null || !channel.canTalk()) {
+            if (channel == null || !channel.canTalk()
+                    || !guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)) {
                 log.warn("Daily automation cannot access channel for challenge {}.", target.getChallengeId());
                 return;
             }
@@ -64,7 +62,7 @@ public class DailyChallengeScheduler {
             }
             // The durable attempt is committed before network I/O. Never blindly resend
             // after a timeout/crash: Discord may already have accepted the message.
-            var sent = channel.sendMessage(format(announcement))
+            var sent = channel.sendMessage(ChallengeAnnouncementMessage.create(announcement))
                     .setNonce("daily-" + announcement.getAssignment().getId())
                     .timeout(20, TimeUnit.SECONDS).submit().get(25, TimeUnit.SECONDS);
             automation.delivered(announcement.getAssignment().getId(), sent.getId());
@@ -94,20 +92,4 @@ public class DailyChallengeScheduler {
         return automation.prepare(target.getChallengeId(), target.getGuildId(), target.getChannelId());
     }
 
-    private MessageCreateData format(AnnouncementDto value) {
-        var assignment = value.getAssignment();
-        long deadline = assignment.getDeadline().getEpochSecond();
-        String content = "Challenge #" + assignment.getChallengeId() + ": " + MarkdownSanitizer.escape(value.getChallengeName())
-                + "\nDay " + assignment.getDayNumber() + " · " + assignment.getAssignmentDate()
-                + "\n" + MarkdownSanitizer.escape(assignment.getTitle()) + " (" + assignment.getDifficulty() + ")"
-                + "\nhttps://leetcode.com/problems/" + assignment.getTitleSlug() + "/"
-                + "\nDeadline: <t:" + deadline + ":F> (<t:" + deadline + ":R>)";
-        var message = new MessageCreateBuilder().setAllowedMentions(List.of());
-        if (value.getRoleId() != null) {
-            content = "<@&" + value.getRoleId() + ">\n" + content;
-            // Only the configured role may ping, including when titles contain mention syntax.
-            message.mentionRoles(value.getRoleId());
-        }
-        return message.setContent(content).build();
-    }
 }

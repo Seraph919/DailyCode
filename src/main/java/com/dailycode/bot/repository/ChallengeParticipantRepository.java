@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.List;
 
 public interface ChallengeParticipantRepository extends JpaRepository<ChallengeParticipant, Long> {
+    long countByChallenge_IdAndChallenge_DiscordGuildId(Long challengeId, String discordGuildId);
+
     // Rank before pagination so equal scores share a rank even across pages.
     // The left join keeps participants with no completed days on the board.
     @Query(value = """

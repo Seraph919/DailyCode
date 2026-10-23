@@ -7,6 +7,7 @@ import com.dailycode.bot.domain.challenge.ChallengeStatus;
 import com.dailycode.bot.domain.challenge.DailyChallenge;
 import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.repository.ChallengeRepository;
+import com.dailycode.bot.repository.ChallengeParticipantRepository;
 import com.dailycode.bot.repository.DailyChallengeRepository;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,6 +37,7 @@ public class ChallengeAutomationService {
     private final DailyChallengeRepository daily;
     private final DailyAssignmentService assignments;
     private final Clock clock;
+    private final ChallengeParticipantRepository participants;
 
     @Transactional
     public String enable(@NotNull @Positive Long id, @NotBlank @Size(max = 20) String guildId,
@@ -95,7 +97,8 @@ public class ChallengeAutomationService {
         entity.claimAnnouncement(expectedChannel, clock.instant());
         daily.flush();
         return Optional.of(new AnnouncementDto(challenge.getName(), guildId, expectedChannel,
-                challenge.getAnnouncementRoleId(), assignment));
+                challenge.getAnnouncementRoleId(), assignment, entity.getProblem().getFrontendId(),
+                participants.countByChallenge_IdAndChallenge_DiscordGuildId(id, guildId)));
     }
 
     @Transactional

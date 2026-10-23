@@ -129,6 +129,17 @@ Use 24-hour time: `00:00` is **12 AM (midnight)**, `12:00` is noon, and `18:30`
 is 6:30 PM. Times follow the challenge's timezone. Leaving out `time` selects
 midnight.
 
+Daily announcements use a colored Discord embed with the problem title, difficulty,
+participant count at posting, verification mode, goal, and deadline. **Join Challenge**
+and **View Status** buttons respond privately; **LeetCode Problem** opens the problem.
+Joining still requires a verified LeetCode account. Status shows saved progress for
+this challenge today, including when clicked on an older announcement. The catalog
+does not currently store problem descriptions or tags.
+
+Give the bot **Embed Links** permission in the announcement channel, in addition to
+**View Channel** and **Send Messages**. This also applies to existing installations.
+New posts use cards after redeployment; previously posted messages stay unchanged.
+
 Allow about a minute after the chosen time for the post to appear. If you enable
 automation after today's posting time, the bot posts today's problem unless it
 has already announced it. The deadline remains the next midnight, even if you
@@ -175,7 +186,7 @@ across servers; you join each challenge separately.
 
 For installation, enable **Guild Install** in the Discord Developer Portal and
 configure the `bot` and `applications.commands` scopes. Give the bot permission to
-view and send messages in the chosen announcement channels. Server managers can
+view and send messages and embed links in the chosen announcement channels. Server managers can
 then install it using the application's installation link.
 
 `DISCORD_TEST_GUILD_ID` is optional. Leave it blank in production. If set, the bot

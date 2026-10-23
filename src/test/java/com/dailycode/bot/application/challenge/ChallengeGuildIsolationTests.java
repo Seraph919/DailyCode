@@ -3,6 +3,8 @@ package com.dailycode.bot.application.challenge;
 import com.dailycode.bot.domain.leetcode.LeetCodeAccount;
 import com.dailycode.bot.domain.user.DiscordUser;
 import com.dailycode.bot.domain.problem.ProblemDifficulty;
+import com.dailycode.bot.domain.problem.Problem;
+import com.dailycode.bot.repository.ChallengeParticipantRepository;
 import com.dailycode.bot.repository.ChallengeRepository;
 import com.dailycode.bot.support.PostgresTestConfiguration;
 import jakarta.persistence.EntityManager;
@@ -36,6 +38,7 @@ class ChallengeGuildIsolationTests {
     @Autowired DailyAssignmentService assignments;
     @Autowired DailyCompletionTransaction completions;
     @Autowired ChallengeRepository repository;
+    @Autowired ChallengeParticipantRepository participants;
     private Long first;
     private Long second;
 
@@ -55,6 +58,18 @@ class ChallengeGuildIsolationTests {
         joins.join(second, "200", USER);
         automation.enable(first, "100", "101", ProblemDifficulty.EASY, LocalTime.MIDNIGHT, "102");
         automation.enable(second, "200", "201", ProblemDifficulty.HARD, LocalTime.NOON, "202");
+    }
+
+    @Test
+    void announcementIncludesOnlyThisChallengesParticipantsAndTheProblemNumber() {
+        entities.persist(new Problem("123456", "123456", "Example", "example", ProblemDifficulty.EASY, false));
+        entities.flush();
+        var result = automation.prepare(first, "100", "101").orElseThrow();
+        assertThat(result.getParticipantCount()).isEqualTo(1);
+        assertThat(result.getFrontendId()).isEqualTo("123456");
+        assertThat(result.getRoleId()).isEqualTo("102");
+        assertThat(participants.countByChallenge_IdAndChallenge_DiscordGuildId(first, "200")).isZero();
+        assertThat(automation.prepare(first, "100", "101")).isEmpty();
     }
 
     @Test

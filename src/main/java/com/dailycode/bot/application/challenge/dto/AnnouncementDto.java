@@ -11,4 +11,6 @@ public class AnnouncementDto {
     private final String channelId;
     private final String roleId;
     private final DailyAssignmentDto assignment;
+    private final String frontendId;
+    private final long participantCount;
 }

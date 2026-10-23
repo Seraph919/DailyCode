@@ -142,14 +142,19 @@ public class DiscordConfiguration {
     public JDA jda(@Value("${discord.token:}") String token,
                    DiscordReadyListener listener, PingCommandListener pingListener, SlashCommandRouter router,
                    DiscordUserRegistrationListener registrationListener, LeetCodeCommandListener leetCodeListener,
-                   ChallengeCommandListener challengeListener) {
+                   ChallengeCommandListener challengeListener, ChallengeButtonListener buttonListener) {
         if (token.isBlank()) {
             throw new IllegalStateException("Set DISCORD_TOKEN before enabling the discord profile.");
         }
 
         return JDABuilder.createLight(token, EnumSet.noneOf(GatewayIntent.class))
                 .setEnableShutdownHook(false) // Spring owns shutdown through the bean's destroy method.
-                .addEventListeners(listener, pingListener, router, registrationListener, leetCodeListener, challengeListener)
+                .addEventListeners(listener, pingListener, router, registrationListener, leetCodeListener, challengeListener, buttonListener)
                 .build();
+    }
+
+    @Bean
+    public ChallengeButtonListener challengeButtonListener(ChallengeCommandHandler handler) {
+        return new ChallengeButtonListener(handler);
     }
 }

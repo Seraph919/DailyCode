@@ -92,7 +92,8 @@ class DiscordConfigurationTests {
                                 context.getBean(PingCommandListener.class), context.getBean(SlashCommandRouter.class),
                                 context.getBean(DiscordUserRegistrationListener.class),
                                 context.getBean(LeetCodeCommandListener.class),
-                                context.getBean(ChallengeCommandListener.class));
+                                context.getBean(ChallengeCommandListener.class),
+                                context.getBean(ChallengeButtonListener.class));
                         ThreadPoolTaskExecutor executor = context.getBean("discordRegistrationExecutor",
                                 ThreadPoolTaskExecutor.class);
                         registrationExecutor.set(executor);

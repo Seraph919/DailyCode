@@ -120,6 +120,18 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
     }
 
+    void afterButtonAcknowledgement(String action, long id, String guild, String user,
+                                    String username, InteractionHook hook) {
+        Runnable task = "join".equals(action)
+                ? new JoinTask(guild, user, username, id, hook)
+                : () -> showStatus(id, guild, user, 1, hook);
+        try {
+            executor.execute(task);
+        } catch (TaskRejectedException failure) {
+            updateReply(hook, "The bot is busy. Please try again shortly.");
+        }
+    }
+
     private int readStatusPage(SlashCommandInteractionEvent event) {
         var option = event.getOption("page");
         long page = option == null ? 1 : option.getAsLong();
@@ -287,6 +299,9 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
         if (!channel.canTalk()) {
             throw new InvalidOptionsException("I need View Channel and Send Messages permissions in that channel.");
+        }
+        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)) {
+            throw new InvalidOptionsException("I need Embed Links permission in that channel to post challenge cards.");
         }
         String roleId = null;
         OptionMapping roleOption = event.getOption("role");
