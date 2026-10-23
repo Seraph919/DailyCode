@@ -67,6 +67,21 @@ and your challenge history. To see older entries:
 Status shows your saved progress. Use `/challenge check` to check for a new
 completion. “No completion recorded” means the bot hasn't recorded one yet.
 
+## View the leaderboard
+
+```text
+/challenge leaderboard id:1
+/challenge leaderboard id:1 page:2
+```
+
+Anyone in the challenge's server can view it, even before joining. The reply is
+visible only to you and does not ping participants. Each page shows up to ten
+participants, ordered by recorded completed days. Equal scores share a rank
+(for example, 1, 1, 3); participants with zero completions are included.
+
+This uses saved progress, without fetching new LeetCode submissions. Use
+`/challenge check` to update your own completion first if needed.
+
 ## Set up a challenge for your server
 
 You need **Manage Server** permission to create a challenge or change automation.

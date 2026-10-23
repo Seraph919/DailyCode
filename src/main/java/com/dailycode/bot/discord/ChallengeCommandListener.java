@@ -46,6 +46,11 @@ public class ChallengeCommandListener extends ListenerAdapter {
                                     .setMinLength(1).setMaxLength(19),
                             new OptionData(OptionType.STRING, "date", "YYYY-MM-DD; defaults to today in the challenge timezone", false)
                                     .setMinLength(10).setMaxLength(10));
+            SubcommandData leaderboard = new SubcommandData("leaderboard", "View participants ranked by recorded completions")
+                    .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
+                                    .setMinLength(1).setMaxLength(19),
+                            new OptionData(OptionType.INTEGER, "page", "Leaderboard page; defaults to 1", false)
+                                    .setMinValue(1).setMaxValue(1000000));
             SubcommandData automate = new SubcommandData("automate", "Enable daily problems and submission checks (Manage Server)")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                                     .setMinLength(1).setMaxLength(19),
@@ -61,7 +66,7 @@ public class ChallengeCommandListener extends ListenerAdapter {
                             .setMinLength(1).setMaxLength(19));
             DiscordCommandRegistration.register(event.getJDA(), Commands.slash("challenge", "Manage coding challenges")
                             .setDefaultPermissions(DefaultMemberPermissions.ENABLED)
-                            .addSubcommands(create, join, today, automate, stop, check, status), testGuildId);
+                            .addSubcommands(create, join, today, automate, stop, check, status, leaderboard), testGuildId);
         } catch (RuntimeException failure) {
             log.error("Could not prepare /challenge registration ({}).", failure.getClass().getSimpleName());
         }

@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 class ChallengeRoleCommandTests {
     private final ChallengeAutomationService automation = mock(ChallengeAutomationService.class);
     private final ChallengeCommandHandler handler = new ChallengeCommandHandler(
-            null, null, null, null, automation, null, null, new SyncTaskExecutor());
+            null, null, null, null, automation, null, null, null, new SyncTaskExecutor());
     private final SlashCommandInteractionEvent event = mock(SlashCommandInteractionEvent.class);
     private final Guild guild = mock(Guild.class);
     private final SelfMember bot = mock(SelfMember.class);
