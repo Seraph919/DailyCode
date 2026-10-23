@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DailyCode Discord Bot — Daily LeetCode Challenges & Leaderboards</title>
+  
+  <meta name="description" content="Automate daily LeetCode challenges in your Discord server. Zero passwords required, instant 5-minute solution sync, role pings, and live server leaderboards.">
+  <meta name="theme-color" content="#08090C">
+  
+  <!-- Open Graph / Discord Embed Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://seraph919.github.io/DailyCode/">
+  <meta property="og:title" content="DailyCode — Automated LeetCode Challenges for Discord">
+  <meta property="og:description" content="Fuel daily coding habits in your community with automated problem drops, password-free bio verification, 5-minute solution sync, and live server leaderboards.">
+  <meta property="og:image" content="./assets/banner.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DailyCode Discord Bot">
+  <meta name="twitter:description" content="Automate daily LeetCode challenges in your Discord server with instant solution verification and leaderboards.">
+  <meta name="twitter:image" content="./assets/banner.png">
+
+  <link rel="icon" type="image/png" href="./assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+  <!-- Ambient Glowing Atmosphere -->
+  <div class="ambient-backdrop">
+    <div class="ambient-glow-top"></div>
+    <div class="ambient-glow-center"></div>
+    <div class="grid-pattern"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="brand-link">
+        <img src="./assets/logo.png" alt="DailyCode Bot Logo" class="brand-logo">
+        <span>Daily<span class="amber-text">Code</span></span>
+        <span class="brand-badge">Bot v1.2</span>
+      </a>
+
+      <nav>
+        <ul class="nav-menu">
+          <li class="nav-item"><a href="#features">Features</a></li>
+          <li class="nav-item"><a href="#how-it-works">How It Works</a></li>
+          <li class="nav-item"><a href="#commands">Commands</a></li>
+          <li class="nav-item"><a href="#permissions">Permissions</a></li>
+          <li class="nav-item"><a href="#faq">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/Seraph919/DailyCode" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="View Source on GitHub">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm dynamic-invite-link">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+          <span>Add to Discord</span>
+        </a>
+        <button class="mobile-toggle" aria-label="Toggle Navigation Menu">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      
+      <!-- Bot Panoramic Art Banner -->
+      <div class="hero-banner-wrap">
+        <img src="./assets/banner.png" alt="DailyCode Bot Banner" class="hero-banner-img">
+      </div>
+
+      <div class="hero-pill">
+        <span class="hero-pill-dot"></span>
+        <span>Automated LeetCode Challenges & Leaderboards</span>
+      </div>
+
+      <h1 class="hero-title">
+        Turn Coding Practice Into an <span class="gradient-text">Addictive Daily Routine</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        DailyCode automatically drops fresh LeetCode challenges in your Discord server, verifies accounts via LeetCode bio without any passwords, polls solutions every 5 minutes, and crowns top coders on live leaderboards.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg dynamic-invite-link">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+          <span>Add Bot to Server</span>
+        </a>
+        <a href="#permissions" class="btn btn-secondary btn-lg">
+          <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Configure Permissions</span>
+        </a>
+      </div>
+
+      <!-- Interactive Discord Live Preview Mockup -->
+      <div class="mockup-container">
+        <div class="mockup-header">
+          <div class="mockup-channel">
+            <span class="mockup-channel-hash">#</span>
+            <span>daily-coding-challenges</span>
+          </div>
+          <div class="mockup-controls">
+            <span class="mockup-dot"></span>
+            <span class="mockup-dot"></span>
+            <span class="mockup-dot"></span>
+          </div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-msg">
+            <img src="./assets/logo.png" alt="DailyCode Bot Avatar" class="mockup-avatar">
+            <div class="mockup-content">
+              <div class="mockup-author">
+                <span class="mockup-name">DailyCode</span>
+                <span class="mockup-bot-tag">BOT</span>
+                <span class="mockup-time">Today at 9:00 AM</span>
+              </div>
+              <span class="mockup-ping">@DailyCoders</span>
+              <p style="color: #dbdee1; margin-bottom: 10px; font-size: 0.94rem;">
+                🚀 <strong>Today's Challenge Drop is Live!</strong> Sharpen your skills and maintain your streak.
+              </p>
+              
+              <div class="mockup-embed">
+                <div class="embed-title">
+                  <span>#15. 3Sum</span>
+                  <span class="embed-difficulty">Medium</span>
+                </div>
+                <div class="embed-desc">
+                  Given an integer array nums, return all the triplets <code>[nums[i], nums[j], nums[k]]</code> such that <code>i != j</code>, <code>i != k</code>, and <code>j != k</code>, and <code>nums[i] + nums[j] + nums[k] == 0</code>.
+                </div>
+                <div class="embed-fields">
+                  <div>
+                    <div class="embed-field-label">Active Participants</div>
+                    <div class="embed-field-value" id="mockup-joined-count">14 Coders</div>
+                  </div>
+                  <div>
+                    <div class="embed-field-label">Verification Mode</div>
+                    <div class="embed-field-value">Auto-Sync (5 Min Polling)</div>
+                  </div>
+                  <div>
+                    <div class="embed-field-label">Problem Tags</div>
+                    <div class="embed-field-value">Array, Two Pointers, Sorting</div>
+                  </div>
+                  <div>
+                    <div class="embed-field-label">Goal Target</div>
+                    <div class="embed-field-value">1 Accepted Submission</div>
+                  </div>
+                </div>
+                <div class="embed-footer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span>Challenge created by Guild Admin • Next check in 3m 15s</span>
+                </div>
+                <div class="embed-actions">
+                  <button class="embed-btn primary" id="mockup-join-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>Join Challenge</span>
+                  </button>
+                  <button class="embed-btn" id="mockup-status-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 20V10"></path>
+                      <path d="M12 20V4"></path>
+                      <path d="M6 20v-6"></path>
+                    </svg>
+                    <span>View Status</span>
+                  </button>
+                  <a href="https://leetcode.com/problems/3sum/" target="_blank" rel="noopener noreferrer" class="embed-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>LeetCode Problem</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Stats & Trust Ribbon -->
+  <section class="stats-ribbon">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h3 class="amber-text">100% Free</h3>
+          <p>Open Source & Self-Hostable</p>
+        </div>
+        <div class="stat-item">
+          <h3 class="amber-text">0 Passwords</h3>
+          <p>Secure Bio Token Verification</p>
+        </div>
+        <div class="stat-item">
+          <h3 class="amber-text">5-Minute</h3>
+          <p>Automated Background Polling</p>
+        </div>
+        <div class="stat-item">
+          <h3 class="amber-text">Spring Boot 3</h3>
+          <p>High Reliability & Fast Execution</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bento Grid Features Section -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Core Architecture</span>
+        <h2 class="section-title">Engineered for Seamless Community Growth</h2>
+        <p class="section-subtitle">Everything your server needs to stay accountable, compete friendly, and master algorithms together.</p>
+      </div>
+
+      <div class="bento-grid">
+        
+        <!-- Bento Card 1: Automated Scheduling -->
+        <div class="bento-card bento-col-8">
+          <div>
+            <div class="card-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <h3 class="card-title">Set-It-and-Forget-It Automation</h3>
+            <p class="card-desc">
+              Schedule daily drops at any hour using <code>/challenge automate time:09:00 channel:#daily role:@Coders</code>. DailyCode automatically picks a fresh problem from LeetCode and alerts your server right on schedule.
+            </p>
+          </div>
+          <div class="card-badge">⏰ Built-in Background Scheduler</div>
+        </div>
+
+        <!-- Bento Card 2: Bio Verification -->
+        <div class="bento-card bento-col-4">
+          <div>
+            <div class="card-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3 class="card-title">Zero Password Risk</h3>
+            <p class="card-desc">
+              Users connect their account via <code>/leetcode connect</code>, paste a short security token into their LeetCode bio summary, and verify in seconds.
+            </p>
+          </div>
+          <div class="card-badge">🔒 100% Secure & Frictionless</div>
+        </div>
+
+        <!-- Bento Card 3: 5-Minute Auto-Check -->
+        <div class="bento-card bento-col-4">
+          <div>
+            <div class="card-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+            </div>
+            <h3 class="card-title">Auto-Check Every 5 Mins</h3>
+            <p class="card-desc">
+              No manual verification required. The bot automatically polls participants' public submission feeds every 5 minutes and marks completed challenges with zero delay.
+            </p>
+          </div>
+          <div class="card-badge">⚡ Instant Solution Sync</div>
+        </div>
+
+        <!-- Bento Card 4: Server Leaderboards -->
+        <div class="bento-card bento-col-8">
+          <div>
+            <div class="card-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                <path d="M4 22h16"></path>
+                <path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-2.34"></path>
+                <path d="M18 14.66V17c0 .55-.45 1-1 1h-2c-.55 0-1-.45-1-1v-2.34"></path>
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path>
+              </svg>
+            </div>
+            <h3 class="card-title">Competitive Server Leaderboards</h3>
+            <p class="card-desc">
+              Gamify your community with <code>/challenge leaderboard</code>. Track solved challenge counts, display rankings, and celebrate the most consistent algorithmic thinkers in your guild.
+            </p>
+          </div>
+          <div class="card-badge">🏆 Live Guild Rankings</div>
+        </div>
+
+        <!-- Bento Card 5: Smart Deduplication -->
+        <div class="bento-card bento-col-6">
+          <div>
+            <div class="card-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 11 12 14 22 4"></polyline>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+              </svg>
+            </div>
+            <h3 class="card-title">Smart Problem Deduplication</h3>
+            <p class="card-desc">
+              DailyCode maintains full history of past challenge questions per server, ensuring members never get repeated problems until the catalog is exhausted.
+            </p>
+          </div>
+          <div class="card-badge">🎯 Fresh Problems Every Day</div>
+        </div>
+
+        <!-- Bento Card 6: Role Mentions & Custom Channels -->
+        <div class="bento-card bento-col-6">
+          <div>
+            <div class="card-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <h3 class="card-title">Custom Role Mentions</h3>
+            <p class="card-desc">
+              Don't spam your whole server. Specify a dedicated role like <code>@LeetCoders</code> in the automate command so only interested members receive ping notifications.
+            </p>
+          </div>
+          <div class="card-badge">🔔 Respectful Server Notifications</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works (3 Steps) -->
+  <section class="steps-section" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Quick Start</span>
+        <h2 class="section-title">Up and Running in 3 Steps</h2>
+        <p class="section-subtitle">No complicated bots or external web portals. Everything happens natively through Discord slash commands.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <h3 class="step-title">Invite the Bot</h3>
+          <p class="step-desc">Add DailyCode to your Discord server with recommended permissions to read/write in your chosen challenge channel.</p>
+          <div class="step-code-snippet">Add to Server (1-Click OAuth2)</div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <h3 class="step-title">Configure Automation</h3>
+          <p class="step-desc">Pick a channel, time, and optional mention role. DailyCode will take care of daily drops and background checks.</p>
+          <div class="step-code-snippet">/challenge automate time:09:00 channel:#daily</div>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <h3 class="step-title">Connect & Solve</h3>
+          <p class="step-desc">Members connect their LeetCode handles via bio token verification, join the daily challenge, and solve problems!</p>
+          <div class="step-code-snippet">/leetcode connect username:johndoe</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slash Commands Terminal Section -->
+  <section class="commands-section" id="commands">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Command Center</span>
+        <h2 class="section-title">Explore Built-in Slash Commands</h2>
+        <p class="section-subtitle">Click the copy button on any command to copy it directly to your clipboard.</p>
+      </div>
+
+      <div class="commands-filter">
+        <button class="filter-btn active" data-category="all">All Commands</button>
+        <button class="filter-btn" data-category="challenge">Challenge & Drops</button>
+        <button class="filter-btn" data-category="leetcode">LeetCode Sync</button>
+        <button class="filter-btn" data-category="automation">Automation</button>
+      </div>
+
+      <div class="commands-list">
+        
+        <!-- Command 1: connect -->
+        <div class="command-card" data-category="leetcode">
+          <div class="command-top">
+            <span class="command-syntax">/leetcode connect</span>
+            <button class="copy-btn" data-copy="/leetcode connect username:" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Connects your Discord account to your LeetCode username and gives you a temporary bio verification token.</p>
+          <div class="command-params">
+            <span class="param-pill req">username: string</span>
+          </div>
+        </div>
+
+        <!-- Command 2: verify -->
+        <div class="command-card" data-category="leetcode">
+          <div class="command-top">
+            <span class="command-syntax">/leetcode verify</span>
+            <button class="copy-btn" data-copy="/leetcode verify" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Verifies that the generated security token is present in your public LeetCode profile bio and completes linking.</p>
+          <div class="command-params">
+            <span class="param-pill">no arguments</span>
+          </div>
+        </div>
+
+        <!-- Command 3: automate -->
+        <div class="command-card" data-category="automation">
+          <div class="command-top">
+            <span class="command-syntax">/challenge automate</span>
+            <button class="copy-btn" data-copy="/challenge automate time:09:00 channel:" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Configures automated recurring challenge drops in a specific channel at a chosen daily time (HH:mm) with optional role ping.</p>
+          <div class="command-params">
+            <span class="param-pill req">time: HH:mm</span>
+            <span class="param-pill req">channel: #channel</span>
+            <span class="param-pill">role: @role (optional)</span>
+          </div>
+        </div>
+
+        <!-- Command 4: stop-auto -->
+        <div class="command-card" data-category="automation">
+          <div class="command-top">
+            <span class="command-syntax">/challenge stop-auto</span>
+            <button class="copy-btn" data-copy="/challenge stop-auto" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Stops automated daily challenge drops for the current Discord server.</p>
+          <div class="command-params">
+            <span class="param-pill">no arguments</span>
+          </div>
+        </div>
+
+        <!-- Command 5: create -->
+        <div class="command-card" data-category="challenge">
+          <div class="command-top">
+            <span class="command-syntax">/challenge create</span>
+            <button class="copy-btn" data-copy="/challenge create name: target:1" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Manually creates a new coding challenge for the server with a target number of problems to solve.</p>
+          <div class="command-params">
+            <span class="param-pill req">name: string</span>
+            <span class="param-pill req">target: integer</span>
+          </div>
+        </div>
+
+        <!-- Command 6: join -->
+        <div class="command-card" data-category="challenge">
+          <div class="command-top">
+            <span class="command-syntax">/challenge join</span>
+            <button class="copy-btn" data-copy="/challenge join" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Joins an active server challenge so your progress is tracked automatically.</p>
+          <div class="command-params">
+            <span class="param-pill">challenge_id: int (optional)</span>
+          </div>
+        </div>
+
+        <!-- Command 7: today -->
+        <div class="command-card" data-category="challenge">
+          <div class="command-top">
+            <span class="command-syntax">/challenge today</span>
+            <button class="copy-btn" data-copy="/challenge today" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Displays today's active LeetCode challenge embed, question description, tags, and problem link.</p>
+          <div class="command-params">
+            <span class="param-pill">no arguments</span>
+          </div>
+        </div>
+
+        <!-- Command 8: status -->
+        <div class="command-card" data-category="challenge">
+          <div class="command-top">
+            <span class="command-syntax">/challenge status</span>
+            <button class="copy-btn" data-copy="/challenge status" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Shows paginated participant progress, completion status, and active participants for the challenge.</p>
+          <div class="command-params">
+            <span class="param-pill">challenge_id: int (optional)</span>
+          </div>
+        </div>
+
+        <!-- Command 9: check -->
+        <div class="command-card" data-category="challenge">
+          <div class="command-top">
+            <span class="command-syntax">/challenge check</span>
+            <button class="copy-btn" data-copy="/challenge check" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Manually triggers an immediate solution check for participants without waiting for the 5-minute cron poll.</p>
+          <div class="command-params">
+            <span class="param-pill">no arguments</span>
+          </div>
+        </div>
+
+        <!-- Command 10: leaderboard -->
+        <div class="command-card" data-category="challenge">
+          <div class="command-top">
+            <span class="command-syntax">/challenge leaderboard</span>
+            <button class="copy-btn" data-copy="/challenge leaderboard" title="Copy Command">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <p class="command-desc">Displays the server leaderboard ranking users by completed challenges, streaks, and solve rate.</p>
+          <div class="command-params">
+            <span class="param-pill">no arguments</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Permissions Calculator Section -->
+  <section class="perms-section" id="permissions">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Permission Control</span>
+        <h2 class="section-title">Customize Discord Bot Permissions</h2>
+        <p class="section-subtitle">
+          Pick and choose exact permissions. DailyCode only asks for what it needs to send messages, embeds, and role alerts.
+        </p>
+      </div>
+
+      <div class="perms-container">
+        <!-- Preset selector -->
+        <div class="perms-presets">
+          <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">Presets:</span>
+          <button class="preset-btn active" data-preset="recommended">Recommended (Full Experience)</button>
+          <button class="preset-btn" data-preset="minimal">Minimal (Basic Posts)</button>
+          <button class="preset-btn" data-preset="admin">Administrator</button>
+        </div>
+
+        <div class="perms-grid">
+          
+          <!-- General Permissions -->
+          <div>
+            <div class="perm-category-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span>General Server Permissions</span>
+            </div>
+            <div class="perm-checkbox-group">
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="VIEW_CHANNEL" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">View Channels</span>
+                  <span class="perm-reason">Required to read challenge channels and commands</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="READ_MESSAGE_HISTORY" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Read Message History</span>
+                  <span class="perm-reason">Enables interaction with button responses and embed status</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="MANAGE_CHANNELS">
+                <div class="perm-text-info">
+                  <span class="perm-name">Manage Channels</span>
+                  <span class="perm-reason">Optional: for auto-creating dedicated challenge channels</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Messaging Permissions -->
+          <div>
+            <div class="perm-category-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Text & Messaging</span>
+            </div>
+            <div class="perm-checkbox-group">
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="SEND_MESSAGES" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Send Messages</span>
+                  <span class="perm-reason">Posts problem drops and challenge updates</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="EMBED_LINKS" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Embed Links</span>
+                  <span class="perm-reason">Renders the rich problem cards, tags, and progress</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="ATTACH_FILES" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Attach Files</span>
+                  <span class="perm-reason">Sends visual badges and leaderboard attachments</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="SEND_MESSAGES_IN_THREADS" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Send Messages in Threads</span>
+                  <span class="perm-reason">Enables solution discussions inside thread channels</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Interaction & Notifications -->
+          <div>
+            <div class="perm-category-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span>Notifications & Reactions</span>
+            </div>
+            <div class="perm-checkbox-group">
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="MENTION_EVERYONE" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Mention Roles & Members</span>
+                  <span class="perm-reason">Used to ping your configured challenge role (e.g. @Coders)</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="ADD_REACTIONS" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Add Reactions</span>
+                  <span class="perm-reason">Adds checkmark reactions when users solve problems</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="USE_EXTERNAL_EMOJIS" checked>
+                <div class="perm-text-info">
+                  <span class="perm-name">Use External Emojis</span>
+                  <span class="perm-reason">Displays custom LeetCode difficulty and language badges</span>
+                </div>
+              </label>
+
+              <label class="perm-checkbox-label">
+                <input type="checkbox" class="perm-check" value="ADMINISTRATOR">
+                <div class="perm-text-info">
+                  <span class="perm-name">Administrator</span>
+                  <span class="perm-reason">Bypasses all permission checks (use with discretion)</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Calculated Output Banner -->
+        <div class="perms-output">
+          <div class="perms-calc-summary">
+            <span class="perms-integer-label">Calculated Permission Integer</span>
+            <span class="perms-integer-value" id="perm-integer">274878486976</span>
+          </div>
+          <div class="perms-cta-group">
+            <button class="btn btn-secondary" id="copy-invite-btn">
+              <svg class="btn-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>Copy Invite URL</span>
+            </button>
+            <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="custom-invite-btn">
+              <svg class="btn-icon-svg" viewBox="0 0 24 24">
+                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+              <span>Invite with Selected Permissions</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">Got Questions?</span>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-subtitle">Everything you need to know about security, hosting, and features.</p>
+      </div>
+
+      <div class="faq-list">
+        
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Is DailyCode free and open source?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-answer">
+            Yes! DailyCode is 100% free and open-source under the MIT license. You can invite the hosted bot to your server or self-host it on your own VPS / container with PostgreSQL.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Do I or my server members need to share LeetCode passwords?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-answer">
+            Never. DailyCode uses a secure, frictionless bio token verification flow. The bot generates a random temporary string (e.g., <code>verify-7b3f9...</code>). You temporarily put this token in your public LeetCode profile "About Me" summary and run <code>/leetcode verify</code>. Once verified, you can remove it immediately!
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How does the bot know when a challenge is solved?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-answer">
+            DailyCode runs an automated background scheduler that queries LeetCode's public recent accepted submissions every 5 minutes. When it detects an accepted solution for the active problem by any joined participant, it marks their progress complete automatically. You can also run <code>/challenge check</code> at any time for instant verification!
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Can multiple Discord servers use the bot independently?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-answer">
+            Yes. Each server has its own isolated challenge schedule, configuration, channel selection, problem deduplication history, and guild leaderboard.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How do I self-host DailyCode?</span>
+            <span class="faq-icon">↓</span>
+          </button>
+          <div class="faq-answer">
+            The project is packaged as a standard Spring Boot 3 Java application with Docker support. Simply clone the repository from GitHub, provide your <code>DISCORD_TOKEN</code> and <code>DATABASE_URL</code> in environment variables or <code>.env</code>, and run <code>docker compose up</code> or <code>mvn spring-boot:run</code>.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner Section -->
+  <section class="cta-banner-section">
+    <div class="container">
+      <div class="cta-banner">
+        <h2 class="cta-banner-title">Ready to Elevate Your Server's Coding Game?</h2>
+        <p class="cta-banner-desc">
+          Add DailyCode to your Discord server in 30 seconds and start practicing together every single day.
+        </p>
+        <div class="cta-banner-actions">
+          <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg dynamic-invite-link">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+            <span>Add Bot to Discord</span>
+          </a>
+          <a href="https://github.com/Seraph919/DailyCode" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
+            <svg class="btn-icon-svg" viewBox="0 0 24 24">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span>Star on GitHub</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#" class="brand-link">
+            <img src="./assets/logo.png" alt="DailyCode Logo" class="brand-logo">
+            <span>Daily<span class="amber-text">Code</span></span>
+          </a>
+          <p class="footer-tagline">
+            Automating algorithmic growth and friendly competition across Discord engineering communities worldwide.
+          </p>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h4>Bot</h4>
+            <ul>
+              <li><a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" class="dynamic-invite-link">Invite to Discord</a></li>
+              <li><a href="#permissions">Permissions Calculator</a></li>
+              <li><a href="#commands">Command Reference</a></li>
+              <li><a href="#features">Features</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Open Source</h4>
+            <ul>
+              <li><a href="https://github.com/Seraph919/DailyCode" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+              <li><a href="https://github.com/Seraph919/DailyCode/issues" target="_blank" rel="noopener noreferrer">Report an Issue</a></li>
+              <li><a href="https://github.com/Seraph919/DailyCode/releases" target="_blank" rel="noopener noreferrer">Release Notes</a></li>
+              <li><a href="https://github.com/Seraph919/DailyCode/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Community</h4>
+            <ul>
+              <li><a href="https://leetcode.com" target="_blank" rel="noopener noreferrer">LeetCode Official</a></li>
+              <li><a href="https://discord.com/developers/docs/intro" target="_blank" rel="noopener noreferrer">Discord API Docs</a></li>
+              <li><a href="#faq">FAQ & Support</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; <span id="current-year">2026</span> DailyCode. Open Source project by <a href="https://github.com/Seraph919" style="color: var(--accent-gold); font-weight: 600;">Seraph919</a>.</p>
+        <p>Built with Java 21, Spring Boot & JDA</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+
