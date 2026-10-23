@@ -22,7 +22,7 @@ services:
       DB_USER: ${DB_USER:-dailycode}
       DB_PASSWORD: ${DB_PASSWORD:?Set in .env}
       DISCORD_TOKEN: ${DISCORD_TOKEN:?Set in .env}
-      DISCORD_TEST_GUILD_ID: ${DISCORD_TEST_GUILD_ID:?Set in .env}
+      DISCORD_TEST_GUILD_ID: ${DISCORD_TEST_GUILD_ID:-}
     logging:
       driver: json-file
       options:

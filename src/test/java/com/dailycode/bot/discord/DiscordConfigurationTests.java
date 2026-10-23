@@ -84,8 +84,7 @@ class DiscordConfigurationTests {
             builders.when(() -> JDABuilder.createLight("test-token", EnumSet.noneOf(GatewayIntent.class)))
                     .thenReturn(builder);
 
-            contextRunner.withPropertyValues("spring.profiles.active=discord", "discord.token=test-token",
-                            "discord.test-guild-id=1260299157571239936")
+            contextRunner.withPropertyValues("spring.profiles.active=discord", "discord.token=test-token")
                     .run(context -> {
                         assertThat(context).hasNotFailed().hasSingleBean(JDA.class);
                         assertThat(context.getBean(JDA.class)).isSameAs(jda);

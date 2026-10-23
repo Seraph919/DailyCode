@@ -149,3 +149,22 @@ You can still view your saved progress and use `/challenge check`.
 ## Check whether the bot responds
 
 Run `/ping` in your server.
+
+## Running the bot in multiple servers
+
+One running DailyCode instance supports every server where it is installed.
+Commands register globally on startup and are available in server channels.
+Each server has its own challenges, participants, announcement channels, and
+optional role mentions. Your verified LeetCode account follows your Discord user
+across servers; you join each challenge separately.
+
+For installation, enable **Guild Install** in the Discord Developer Portal and
+configure the `bot` and `applications.commands` scopes. Give the bot permission to
+view and send messages in the chosen announcement channels. Server managers can
+then install it using the application's installation link.
+
+`DISCORD_TEST_GUILD_ID` is optional. Leave it blank in production. If set, the bot
+also mirrors commands into that development server for immediate updates; it
+still registers global commands and accepts commands from other servers. Existing
+installations can keep their current value during migration so their older
+guild-specific commands get refreshed too.

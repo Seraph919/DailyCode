@@ -115,9 +115,8 @@ public class DiscordConfiguration {
     }
 
     @Bean
-    public SlashCommandRouter slashCommandRouter(@Value("${discord.test-guild-id:}") String testGuildId,
-                                                  List<SlashCommandHandler> handlers) {
-        return new SlashCommandRouter(testGuildId, handlers);
+    public SlashCommandRouter slashCommandRouter(List<SlashCommandHandler> handlers) {
+        return new SlashCommandRouter(handlers);
     }
 
     @Bean
@@ -133,10 +132,9 @@ public class DiscordConfiguration {
 
     @Bean
     public DiscordUserRegistrationListener discordUserRegistrationListener(
-            @Value("${discord.test-guild-id:}") String testGuildId,
             DiscordUserService userService,
             @Qualifier("discordRegistrationExecutor") TaskExecutor executor) {
-        return new DiscordUserRegistrationListener(testGuildId, userService, executor);
+        return new DiscordUserRegistrationListener(userService, executor);
     }
 
     @Bean(destroyMethod = "shutdown")
