@@ -12,6 +12,7 @@ import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
 import com.dailycode.bot.application.challenge.ChallengeProgressService;
+import com.dailycode.bot.application.challenge.ChallengeLeaderboardService;
 import com.dailycode.bot.application.challenge.ChallengeTodayException;
 import com.dailycode.bot.application.challenge.dto.ChallengeTodayDto;
 import com.dailycode.bot.application.challenge.dto.ChallengeDto;
@@ -47,6 +48,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     private final ChallengeAutomationService automation;
     private final DailyCompletionService completion;
     private final ChallengeProgressService progress;
+    private final ChallengeLeaderboardService leaderboard;
     private final TaskExecutor executor;
 
     @Override
@@ -59,7 +61,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         try {
             if ("join".equals(event.getSubcommandName()) || "today".equals(event.getSubcommandName())) {
                 readChallengeId(event);
-            } else if ("status".equals(event.getSubcommandName())) {
+            } else if ("status".equals(event.getSubcommandName()) || "leaderboard".equals(event.getSubcommandName())) {
                 readChallengeId(event);
                 readStatusPage(event);
             } else if ("check".equals(event.getSubcommandName())) {
@@ -92,6 +94,11 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 String guild = event.getGuild().getId();
                 String user = event.getUser().getId();
                 task = () -> showStatus(id, guild, user, page, hook);
+            } else if ("leaderboard".equals(event.getSubcommandName())) {
+                Long id = readChallengeId(event);
+                int page = readStatusPage(event);
+                String guild = event.getGuild().getId();
+                task = () -> showLeaderboard(id, guild, page, hook);
             } else if ("check".equals(event.getSubcommandName())) {
                 CheckOptions options = readCheckOptions(event);
                 task = new CheckTask(event.getGuild().getId(), event.getUser().getId(), options, hook);
@@ -117,7 +124,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         var option = event.getOption("page");
         long page = option == null ? 1 : option.getAsLong();
         if (page < 1 || page > 1000000) {
-            throw new InvalidOptionsException("History page must be between 1 and 1000000.");
+            throw new InvalidOptionsException("Page must be between 1 and 1000000.");
         }
         return (int) page;
     }
@@ -155,6 +162,35 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         } catch (RuntimeException failure) {
             log.error("Could not load challenge status ({}).", failure.getClass().getSimpleName());
             message = "Could not load your progress. Please try again shortly.";
+        }
+        updateReply(hook, message);
+    }
+
+    private void showLeaderboard(Long id, String guild, int page, InteractionHook hook) {
+        String message;
+        try {
+            var result = leaderboard.leaderboard(id, guild, page);
+            if (page > result.totalPages()) {
+                message = "That leaderboard page does not exist. Choose a page from 1 to " + result.totalPages() + ".";
+            } else {
+                var text = new StringBuilder("Leaderboard · Challenge #").append(id).append(": ")
+                        .append(MarkdownSanitizer.escape(result.name()))
+                        .append("\nPage ").append(page).append("/").append(result.totalPages())
+                        .append(" · ").append(result.participants()).append(" participants\n");
+                for (var entry : result.entries()) {
+                    text.append("\n#").append(entry.rank()).append(" · <@").append(entry.discordUserId())
+                            .append("> — ").append(entry.completed()).append(" completed");
+                }
+                if (result.entries().isEmpty()) text.append("\nNo participants yet. Join with /challenge join.");
+                text.append("\n\nRanked by recorded completions. Equal scores share a rank.")
+                        .append("\nUse /challenge check to check your latest submission.");
+                message = text.toString();
+            }
+        } catch (DailyCompletionException failure) {
+            message = "That challenge was not found in this server.";
+        } catch (RuntimeException failure) {
+            log.error("Could not load challenge leaderboard ({}).", failure.getClass().getSimpleName());
+            message = "Could not load the leaderboard. Please try again shortly.";
         }
         updateReply(hook, message);
     }

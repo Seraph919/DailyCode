@@ -13,6 +13,28 @@ import java.util.Optional;
 import java.util.List;
 
 public interface ChallengeParticipantRepository extends JpaRepository<ChallengeParticipant, Long> {
+    // Rank before pagination so equal scores share a rank even across pages.
+    // The left join keeps participants with no completed days on the board.
+    @Query(value = """
+            select users.discord_user_id as "discordUserId",
+                   count(progress.id) as completed,
+                   rank() over (order by count(progress.id) desc) as rank
+            from challenge_participants participant
+            join challenges challenge on challenge.id = participant.challenge_id
+            join discord_users users on users.id = participant.discord_user_id
+            left join daily_progress progress on progress.participant_id = participant.id
+                and progress.challenge_id = challenge.id and progress.status = 'COMPLETED'
+            where challenge.id = :challengeId and challenge.discord_guild_id = :guildId
+            group by participant.id, users.discord_user_id
+            order by completed desc, participant.id asc
+            """, countQuery = """
+            select count(*) from challenge_participants participant
+            join challenges challenge on challenge.id = participant.challenge_id
+            where challenge.id = :challengeId and challenge.discord_guild_id = :guildId
+            """, nativeQuery = true)
+    Page<ChallengeLeaderboardEntry> findLeaderboard(@Param("challengeId") Long challengeId,
+                                                    @Param("guildId") String guildId, Pageable pageable);
+
     @Query("""
             select participant from ChallengeParticipant participant
             join fetch participant.challenge challenge

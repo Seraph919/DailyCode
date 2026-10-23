@@ -6,6 +6,7 @@ import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeTodayService;
 import com.dailycode.bot.application.challenge.ChallengeProgressService;
+import com.dailycode.bot.application.challenge.ChallengeLeaderboardService;
 import com.dailycode.bot.application.challenge.DailyCompletionService;
 import com.dailycode.bot.application.challenge.AutomaticCheckTargets;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -86,9 +87,9 @@ public class DiscordConfiguration {
     public ChallengeCommandHandler challengeCommandHandler(DiscordUserService users, ChallengeService challenges,
             ChallengeJoinService joins, ChallengeTodayService today, ChallengeAutomationService automation,
             DailyCompletionService completion,
-            ChallengeProgressService progress,
+            ChallengeProgressService progress, ChallengeLeaderboardService leaderboard,
             @Qualifier("discordChallengeExecutor") TaskExecutor executor) {
-        return new ChallengeCommandHandler(users, challenges, joins, today, automation, completion, progress, executor);
+        return new ChallengeCommandHandler(users, challenges, joins, today, automation, completion, progress, leaderboard, executor);
     }
 
     @Bean

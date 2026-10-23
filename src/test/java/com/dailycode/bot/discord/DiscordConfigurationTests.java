@@ -112,6 +112,11 @@ class DiscordConfigurationTests {
     @TestConfiguration(proxyBeanMethods = false)
     static class TestServices {
         @Bean
+        com.dailycode.bot.application.challenge.ChallengeLeaderboardService challengeLeaderboardService() {
+            return mock(com.dailycode.bot.application.challenge.ChallengeLeaderboardService.class);
+        }
+
+        @Bean
         com.dailycode.bot.application.problem.ProblemCatalogService problemCatalogService() {
             return mock(com.dailycode.bot.application.problem.ProblemCatalogService.class);
         }
