@@ -3,4 +3,5 @@
 !Dockerfile
 !pom.xml
 !src/
-!src/**
+!src/main/
+!src/main/**

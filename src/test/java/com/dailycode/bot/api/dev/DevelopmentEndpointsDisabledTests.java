@@ -22,6 +22,8 @@ class DevelopmentEndpointsDisabledTests {
         mvc.perform(post("/api/dev/discord-users").contentType("application/json")
                         .content("{\"discordUserId\":\"123\",\"discordUsername\":\"alice\"}"))
                 .andExpect(status().isNotFound());
+        mvc.perform(get("/api/dev/leetcode/profile").param("username", "alice"))
+                .andExpect(status().isNotFound());
         mvc.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
         mvc.perform(get("/swagger-ui/index.html")).andExpect(status().isNotFound());
     }
