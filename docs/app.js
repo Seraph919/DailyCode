@@ -162,7 +162,7 @@ function initCommandFilters() {
 }
 
 /**
- * Click-to-copy handler
+ * Click-to-copy handler (Brutalist)
  */
 function initCopyButtons() {
   document.querySelectorAll(".copy-btn").forEach((btn) => {
@@ -172,19 +172,23 @@ function initCopyButtons() {
       if (!textToCopy) return;
 
       navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast(`Copied: "${textToCopy}"`);
-        const originalIcon = btn.innerHTML;
-        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFA116" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        showToast(`COPIED: "${textToCopy}"`);
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = `<span>[✓ COPIED]</span>`;
+        btn.style.background = "#FF8800";
+        btn.style.color = "#000000";
         setTimeout(() => {
-          btn.innerHTML = originalIcon;
-        }, 1800);
+          btn.innerHTML = originalContent;
+          btn.style.background = "";
+          btn.style.color = "";
+        }, 1500);
       });
     });
   });
 }
 
 /**
- * FAQ accordion toggle
+ * FAQ accordion toggle (Brutalist [+] / [-])
  */
 function initFaqAccordion() {
   const faqItems = document.querySelectorAll(".faq-item");
@@ -192,6 +196,7 @@ function initFaqAccordion() {
   faqItems.forEach((item) => {
     const questionBtn = item.querySelector(".faq-question");
     const answer = item.querySelector(".faq-answer");
+    const icon = item.querySelector(".faq-toggle-icon");
 
     if (!questionBtn || !answer) return;
 
@@ -203,7 +208,9 @@ function initFaqAccordion() {
         if (other !== item) {
           other.classList.remove("active");
           const otherAns = other.querySelector(".faq-answer");
+          const otherIcon = other.querySelector(".faq-toggle-icon");
           if (otherAns) otherAns.style.maxHeight = null;
+          if (otherIcon) otherIcon.textContent = "[+]";
         }
       });
 
@@ -211,9 +218,11 @@ function initFaqAccordion() {
       if (isOpen) {
         item.classList.remove("active");
         answer.style.maxHeight = null;
+        if (icon) icon.textContent = "[+]";
       } else {
         item.classList.add("active");
         answer.style.maxHeight = answer.scrollHeight + 30 + "px";
+        if (icon) icon.textContent = "[−]";
       }
     });
   });
@@ -274,7 +283,7 @@ function initMockupInteractivity() {
 }
 
 /**
- * Displays a non-intrusive toast notification
+ * Displays a brutalist toast notification
  */
 function showToast(message) {
   let toast = document.querySelector(".toast");
@@ -285,10 +294,7 @@ function showToast(message) {
   }
 
   toast.innerHTML = `
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFA116" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-      <polyline points="22 4 12 14.01 9 11.01"></polyline>
-    </svg>
+    <span style="color: var(--accent-amber); font-weight: 800;">[OK]</span>
     <span>${message}</span>
   `;
 
@@ -297,6 +303,6 @@ function showToast(message) {
   clearTimeout(window.toastTimer);
   window.toastTimer = setTimeout(() => {
     toast.classList.remove("show");
-  }, 2600);
+  }, 2200);
 }
 
