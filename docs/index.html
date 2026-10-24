@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DailyCode — Brutalist LeetCode Discord Bot</title>
+  
+  <meta name="description" content="Automate daily LeetCode challenges in your Discord server. Zero passwords required, instant 5-minute solution sync, role pings, and live server leaderboards.">
+  <meta name="theme-color" content="#080809">
+  
+  <!-- Open Graph Metadata -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://seraph919.github.io/DailyCode/">
+  <meta property="og:title" content="DailyCode — Automated LeetCode Challenges for Discord">
+  <meta property="og:description" content="Automate daily LeetCode challenges in your Discord server. Zero passwords, 5-minute solution sync, and live server leaderboards.">
+  <meta property="og:image" content="./assets/logo.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="DailyCode Discord Bot">
+  <meta name="twitter:description" content="Automate daily LeetCode challenges in your Discord server with instant solution verification and leaderboards.">
+  <meta name="twitter:image" content="./assets/logo.png">
+
+  <link rel="icon" type="image/png" href="./assets/logo.png">
+  
+  <!-- Fonts: Space Grotesk & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+  <!-- Stark Technical Grid Background -->
+  <div class="grid-overlay"></div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <div class="brand-wrap">
+        <div class="brand-logo-frame">
+          <img src="./assets/logo.png" alt="DailyCode Logo" class="brand-logo">
+        </div>
+        <a href="#" class="brand-title">Daily<span class="text-orange">Code</span></a>
+        <span class="brand-badge">v1.2</span>
+      </div>
+
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="#features">// Features</a></li>
+          <li><a href="#how-it-works">// Setup</a></li>
+          <li><a href="#commands">// Commands</a></li>
+          <li><a href="#permissions">// Permissions</a></li>
+          <li><a href="#faq">// FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/Seraph919/DailyCode" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="View Source on GitHub">
+          <span>GitHub</span>
+          <span>↗</span>
+        </a>
+        <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm dynamic-invite-link">
+          <span>+ Add to Discord</span>
+        </a>
+        <button class="mobile-toggle" aria-label="Toggle Menu">[MENU]</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- High-Contrast Marquee / Ticker -->
+  <div class="ticker-bar">
+    <div class="ticker-track">
+      // AUTOMATED DAILY CHALLENGES &nbsp;•&nbsp; 0 PASSWORDS (BIO VERIFICATION) &nbsp;•&nbsp; 5-MINUTE AUTO POLL &nbsp;•&nbsp; GUILD LEADERBOARDS &nbsp;•&nbsp; DEDUPLICATION ENGINE &nbsp;•&nbsp; ROLE PINGS &nbsp;•&nbsp; 100% FREE & OPEN SOURCE &nbsp;•&nbsp; // AUTOMATED DAILY CHALLENGES &nbsp;•&nbsp; 0 PASSWORDS (BIO VERIFICATION) &nbsp;•&nbsp; 5-MINUTE AUTO POLL &nbsp;•&nbsp; GUILD LEADERBOARDS &nbsp;•&nbsp; DEDUPLICATION ENGINE &nbsp;•&nbsp; ROLE PINGS &nbsp;•&nbsp; 100% FREE & OPEN SOURCE &nbsp;•&nbsp;
+    </div>
+  </div>
+
+  <!-- Hero Section (Simple, High Impact, No Banner) -->
+  <section class="hero-section">
+    <div class="container">
+      
+      <div class="hero-status-strip">
+        <span class="status-tag">
+          <span class="status-dot"></span>
+          <span>STATUS: ONLINE</span>
+        </span>
+        <span class="status-tag">LEETCODE API: SYNCED</span>
+        <span class="status-tag">SPRING BOOT 3</span>
+      </div>
+
+      <div class="hero-grid">
+        <!-- Left: Pitch -->
+        <div>
+          <h1 class="hero-headline">
+            Daily LeetCode.<br>
+            <span class="text-orange">Directly in Discord.</span>
+          </h1>
+
+          <p class="hero-desc">
+            Stop pasting problem links manually. DailyCode automates daily problem drops, verifies participant accounts using profile bio tokens without passwords, checks solutions every 5 minutes, and tracks server leaderboards.
+          </p>
+
+          <div class="hero-cta-row">
+            <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg dynamic-invite-link">
+              <span>+ Add Bot to Server</span>
+            </a>
+            <a href="#permissions" class="btn btn-secondary btn-lg">
+              <span>Permissions Calc ↓</span>
+            </a>
+            <a href="https://github.com/Seraph919/DailyCode" target="_blank" rel="noopener noreferrer" class="btn btn-accent btn-lg">
+              <span>GitHub ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: Stark Brutalist Discord Embed Mockup -->
+        <div>
+          <div class="mockup-card">
+            <div class="mockup-bar">
+              <span># daily-coding-challenges</span>
+              <div class="mockup-dots">
+                <span class="mockup-dot"></span>
+                <span class="mockup-dot"></span>
+                <span class="mockup-dot"></span>
+              </div>
+            </div>
+
+            <div class="mockup-inner">
+              <div class="mockup-user-row">
+                <div class="mockup-avatar-frame">
+                  <img src="./assets/logo.png" alt="Bot Avatar">
+                </div>
+                <div>
+                  <span class="mockup-bot-name">DailyCode</span>
+                  <span class="mockup-bot-pill">BOT</span>
+                </div>
+              </div>
+
+              <div class="mockup-role-tag">@DailyCoders 🚀 Today's Drop is Live!</div>
+
+              <div class="mockup-problem-box">
+                <div class="mockup-problem-head">
+                  <span class="mockup-problem-title">#15. 3Sum</span>
+                  <span class="mockup-difficulty-badge">Medium</span>
+                </div>
+
+                <p class="mockup-problem-desc">
+                  Given an integer array nums, return all triplets <code>[nums[i], nums[j], nums[k]]</code> such that <code>i != j</code>, <code>i != k</code>, <code>j != k</code>, and <code>nums[i] + nums[j] + nums[k] == 0</code>.
+                </p>
+
+                <div class="mockup-matrix">
+                  <div class="matrix-item">
+                    <div class="matrix-label">Active Coders</div>
+                    <div class="matrix-val" id="mockup-joined-count">14 Joined</div>
+                  </div>
+                  <div class="matrix-item">
+                    <div class="matrix-label">Sync Rate</div>
+                    <div class="matrix-val">Every 5 Minutes</div>
+                  </div>
+                  <div class="matrix-item">
+                    <div class="matrix-label">Tags</div>
+                    <div class="matrix-val">Array, Two Pointers</div>
+                  </div>
+                  <div class="matrix-item">
+                    <div class="matrix-label">Verification</div>
+                    <div class="matrix-val">Auto-Poll</div>
+                  </div>
+                </div>
+
+                <div class="mockup-btns-row">
+                  <button class="mockup-action-btn" id="mockup-join-btn">[ Join Challenge ]</button>
+                  <button class="mockup-action-btn" id="mockup-status-btn">[ Status ]</button>
+                  <a href="https://leetcode.com/problems/3sum/" target="_blank" rel="noopener noreferrer" class="mockup-action-btn">[ LeetCode ↗ ]</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Brutalist Stats Strip -->
+  <section class="stats-strip">
+    <div class="stats-box">
+      <div class="stats-num">100%</div>
+      <div class="stats-desc">Free & Open Source</div>
+    </div>
+    <div class="stats-box">
+      <div class="stats-num">0</div>
+      <div class="stats-desc">Passwords Needed</div>
+    </div>
+    <div class="stats-box">
+      <div class="stats-num">5 MIN</div>
+      <div class="stats-desc">Auto Solution Polling</div>
+    </div>
+    <div class="stats-box">
+      <div class="stats-num">JAVA 21</div>
+      <div class="stats-desc">Spring Boot 3 + Postgres</div>
+    </div>
+  </section>
+
+  <!-- Features Section (Stark Matrix Grid) -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head">
+        <span class="mono-label text-orange">// ARCHITECTURE</span>
+        <h2>Engineered for Consistency</h2>
+        <p class="section-subtitle">No fluff, no bloat. Pure functionality designed to keep developer communities active.</p>
+      </div>
+
+      <div class="features-matrix">
+        <!-- 01 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-box-top">
+              <span class="feature-idx">01</span>
+              <span class="feature-tag">CRON SCHEDULER</span>
+            </div>
+            <h3 class="feature-box-title">Automated Daily Drops</h3>
+            <p class="feature-box-desc">
+              Schedule daily drops at any time using <code>/challenge automate time:09:00 channel:#daily role:@Coders</code>. The bot handles question selection and alerts automatically.
+            </p>
+          </div>
+          <div class="mono-label text-orange">> Fully Hands-Off</div>
+        </div>
+
+        <!-- 02 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-box-top">
+              <span class="feature-idx">02</span>
+              <span class="feature-tag">BIO VERIFY</span>
+            </div>
+            <h3 class="feature-box-title">Zero Password Risk</h3>
+            <p class="feature-box-desc">
+              Connect your LeetCode handle with <code>/leetcode connect</code>, paste a short security token into your public bio summary, and verify in seconds with <code>/leetcode verify</code>.
+            </p>
+          </div>
+          <div class="mono-label text-orange">> No Credentials Shared</div>
+        </div>
+
+        <!-- 03 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-box-top">
+              <span class="feature-idx">03</span>
+              <span class="feature-tag">AUTO POLL</span>
+            </div>
+            <h3 class="feature-box-title">5-Minute Auto-Check</h3>
+            <p class="feature-box-desc">
+              Participants don't need to manually post solutions. DailyCode runs a periodic background check that inspects recent submissions and marks completions automatically.
+            </p>
+          </div>
+          <div class="mono-label text-orange">> Instant Verification</div>
+        </div>
+
+        <!-- 04 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-box-top">
+              <span class="feature-idx">04</span>
+              <span class="feature-tag">STANDINGS</span>
+            </div>
+            <h3 class="feature-box-title">Server Leaderboard</h3>
+            <p class="feature-box-desc">
+              Run <code>/challenge leaderboard</code> to see server rankings, streaks, and total solved counts. Friendly competition drives habitual problem solving.
+            </p>
+          </div>
+          <div class="mono-label text-orange">> Live Guild Rankings</div>
+        </div>
+
+        <!-- 05 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-box-top">
+              <span class="feature-idx">05</span>
+              <span class="feature-tag">DEDUPLICATION</span>
+            </div>
+            <h3 class="feature-box-title">No Repeat Problems</h3>
+            <p class="feature-box-desc">
+              The bot tracks historical drops per guild and avoids repeated problems, ensuring members get diverse algorithm problems across arrays, trees, dynamic programming, and graphs.
+            </p>
+          </div>
+          <div class="mono-label text-orange">> Unique Catalog Drops</div>
+        </div>
+
+        <!-- 06 -->
+        <div class="feature-box">
+          <div>
+            <div class="feature-box-top">
+              <span class="feature-idx">06</span>
+              <span class="feature-tag">PINGS</span>
+            </div>
+            <h3 class="feature-box-title">Targeted Role Mentions</h3>
+            <p class="feature-box-desc">
+              Avoid server-wide noise. Specify a role like <code>@DailyCoders</code> so only opted-in members receive notifications when the daily problem drops.
+            </p>
+          </div>
+          <div class="mono-label text-orange">> Clean Server Comms</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3-Step Setup Pipeline -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-head">
+        <span class="mono-label text-orange">// SETUP GUIDE</span>
+        <h2>Ready in 3 Commands</h2>
+        <p class="section-subtitle">No external web dashboards. Everything operates through Discord native slash commands.</p>
+      </div>
+
+      <div class="steps-matrix">
+        <div class="step-box">
+          <div class="step-num-big">01</div>
+          <h3 class="step-box-title">Invite Bot</h3>
+          <p class="step-box-desc">Authorize DailyCode on your server with permissions to post embeds in your chosen channel.</p>
+          <div class="step-code-bar">> [ 1-Click OAuth2 Authorize ]</div>
+        </div>
+
+        <div class="step-box">
+          <div class="step-num-big">02</div>
+          <h3 class="step-box-title">Set Automation</h3>
+          <p class="step-box-desc">Configure the daily drop time, target channel, and optional role ping.</p>
+          <div class="step-code-bar">/challenge automate time:09:00 channel:#daily</div>
+        </div>
+
+        <div class="step-box">
+          <div class="step-num-big">03</div>
+          <h3 class="step-box-title">Connect & Solve</h3>
+          <p class="step-box-desc">Members connect their LeetCode account with a bio token and start solving daily.</p>
+          <div class="step-code-bar">/leetcode connect username:you</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slash Commands Terminal Section -->
+  <section class="section" id="commands">
+    <div class="container">
+      <div class="section-head">
+        <span class="mono-label text-orange">// CLI REFERENCE</span>
+        <h2>Slash Commands</h2>
+        <p class="section-subtitle">Click the copy button on any command to copy its syntax directly.</p>
+      </div>
+
+      <div class="commands-controls">
+        <button class="filter-btn active" data-category="all">All Commands</button>
+        <button class="filter-btn" data-category="challenge">Challenge & Drops</button>
+        <button class="filter-btn" data-category="leetcode">LeetCode Sync</button>
+        <button class="filter-btn" data-category="automation">Automation</button>
+      </div>
+
+      <div class="commands-grid">
+        <!-- 1: connect -->
+        <div class="command-card" data-category="leetcode">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/leetcode connect</span>
+              <button class="copy-btn" data-copy="/leetcode connect username:" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Binds your Discord handle to your LeetCode username and provides a temporary verification token.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge req">username: string</span>
+          </div>
+        </div>
+
+        <!-- 2: verify -->
+        <div class="command-card" data-category="leetcode">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/leetcode verify</span>
+              <button class="copy-btn" data-copy="/leetcode verify" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Verifies that the generated token is present in your public LeetCode profile bio and finalizes connection.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge">no arguments</span>
+          </div>
+        </div>
+
+        <!-- 3: automate -->
+        <div class="command-card" data-category="automation">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge automate</span>
+              <button class="copy-btn" data-copy="/challenge automate time:09:00 channel:" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Schedules recurring daily challenge drops in a specific channel at a chosen hour (HH:mm) with optional role ping.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge req">time: HH:mm</span>
+            <span class="arg-badge req">channel: #channel</span>
+            <span class="arg-badge">role: @role (optional)</span>
+          </div>
+        </div>
+
+        <!-- 4: stop-auto -->
+        <div class="command-card" data-category="automation">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge stop-auto</span>
+              <button class="copy-btn" data-copy="/challenge stop-auto" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Deactivates automated daily challenge drops for the current server.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge">no arguments</span>
+          </div>
+        </div>
+
+        <!-- 5: create -->
+        <div class="command-card" data-category="challenge">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge create</span>
+              <button class="copy-btn" data-copy="/challenge create name: target:1" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Manually creates a new coding challenge for the server with a target number of problems.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge req">name: string</span>
+            <span class="arg-badge req">target: integer</span>
+          </div>
+        </div>
+
+        <!-- 6: join -->
+        <div class="command-card" data-category="challenge">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge join</span>
+              <button class="copy-btn" data-copy="/challenge join" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Enrolls your linked LeetCode handle into the active server challenge.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge">challenge_id: int (optional)</span>
+          </div>
+        </div>
+
+        <!-- 7: today -->
+        <div class="command-card" data-category="challenge">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge today</span>
+              <button class="copy-btn" data-copy="/challenge today" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Displays today's active LeetCode question, difficulty, description snippet, tags, and problem link.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge">no arguments</span>
+          </div>
+        </div>
+
+        <!-- 8: status -->
+        <div class="command-card" data-category="challenge">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge status</span>
+              <button class="copy-btn" data-copy="/challenge status" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Shows paginated participant progress, completion status, and active participants for the challenge.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge">challenge_id: int (optional)</span>
+          </div>
+        </div>
+
+        <!-- 9: check -->
+        <div class="command-card" data-category="challenge">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge check</span>
+              <button class="copy-btn" data-copy="/challenge check" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Triggers an immediate verification check for participants without waiting for the 5-minute background cron.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge">no arguments</span>
+          </div>
+        </div>
+
+        <!-- 10: leaderboard -->
+        <div class="command-card" data-category="challenge">
+          <div>
+            <div class="command-card-header">
+              <span class="command-name">/challenge leaderboard</span>
+              <button class="copy-btn" data-copy="/challenge leaderboard" title="Copy Command">
+                <span>[COPY]</span>
+              </button>
+            </div>
+            <p class="command-card-desc">Displays the server leaderboard ranking users by completed challenges, streaks, and solve rate.</p>
+          </div>
+          <div class="command-args">
+            <span class="arg-badge">no arguments</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Permissions Calculator -->
+  <section class="section" id="permissions">
+    <div class="container">
+      <div class="section-head">
+        <span class="mono-label text-orange">// PERMISSION MATRIX</span>
+        <h2>Discord Permission Calculator</h2>
+        <p class="section-subtitle">Fine-tune the exact OAuth2 permissions bitmask to invite DailyCode with.</p>
+      </div>
+
+      <div class="perms-panel">
+        <div class="perms-presets-bar">
+          <span class="mono-label">Presets:</span>
+          <button class="preset-btn active" data-preset="recommended">[ Recommended ]</button>
+          <button class="preset-btn" data-preset="minimal">[ Minimal ]</button>
+          <button class="preset-btn" data-preset="admin">[ Administrator ]</button>
+        </div>
+
+        <div class="perms-grid">
+          <!-- Col 1 -->
+          <div>
+            <div class="perm-col-title">// GENERAL</div>
+            <div class="perm-items-list">
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="VIEW_CHANNEL" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">View Channels</span>
+                  <span class="perm-item-why">Read commands and challenge channel</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="READ_MESSAGE_HISTORY" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Read Message History</span>
+                  <span class="perm-item-why">Respond to button interactions</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="MANAGE_CHANNELS">
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Manage Channels</span>
+                  <span class="perm-item-why">Optional: create challenge channels</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Col 2 -->
+          <div>
+            <div class="perm-col-title">// TEXT & MESSAGING</div>
+            <div class="perm-items-list">
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="SEND_MESSAGES" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Send Messages</span>
+                  <span class="perm-item-why">Post daily questions & updates</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="EMBED_LINKS" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Embed Links</span>
+                  <span class="perm-item-why">Render rich problem cards & tags</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="ATTACH_FILES" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Attach Files</span>
+                  <span class="perm-item-why">Send graphic badges & reports</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="SEND_MESSAGES_IN_THREADS" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Send in Threads</span>
+                  <span class="perm-item-why">Threaded solution discussions</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Col 3 -->
+          <div>
+            <div class="perm-col-title">// NOTIFICATIONS</div>
+            <div class="perm-items-list">
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="MENTION_EVERYONE" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Mention Roles</span>
+                  <span class="perm-item-why">Ping designated challenge role</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="ADD_REACTIONS" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Add Reactions</span>
+                  <span class="perm-item-why">React on successful solve</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="USE_EXTERNAL_EMOJIS" checked>
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">External Emojis</span>
+                  <span class="perm-item-why">LeetCode difficulty icons</span>
+                </div>
+              </label>
+
+              <label class="perm-item-row">
+                <input type="checkbox" class="perm-check" value="ADMINISTRATOR">
+                <div class="perm-text-wrap">
+                  <span class="perm-item-name">Administrator</span>
+                  <span class="perm-item-why">Full server bypass</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="perms-readout">
+          <div class="perms-calc-box">
+            <span class="perms-calc-label">// CALCULATED PERMISSION INTEGER</span>
+            <span class="perms-calc-val" id="perm-integer">274878486976</span>
+          </div>
+
+          <div class="perms-cta-wrap">
+            <button class="btn btn-secondary" id="copy-invite-btn">
+              <span>[ COPY INVITE URL ]</span>
+            </button>
+            <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="custom-invite-btn">
+              <span>+ INVITE WITH SELECTED PERMS ↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-head">
+        <span class="mono-label text-orange">// INQUIRIES</span>
+        <h2>Frequently Asked Questions</h2>
+        <p class="section-subtitle">Common questions regarding security, polling, and hosting.</p>
+      </div>
+
+      <div class="faq-stack">
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Is DailyCode free and open source?</span>
+            <span class="faq-toggle-icon">[+]</span>
+          </button>
+          <div class="faq-answer">
+            Yes. DailyCode is 100% free under the MIT license. You can invite the hosted bot to your server or self-host your own container instance backed by PostgreSQL.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Do users ever need to provide their LeetCode password?</span>
+            <span class="faq-toggle-icon">[+]</span>
+          </button>
+          <div class="faq-answer">
+            Never. DailyCode uses a secure bio token verification flow. The bot generates a temporary alphanumeric token. You paste it into your public LeetCode profile bio summary, run <code>/leetcode verify</code>, and remove it immediately after.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How does the bot verify accepted submissions?</span>
+            <span class="faq-toggle-icon">[+]</span>
+          </button>
+          <div class="faq-answer">
+            An internal scheduled background task polls LeetCode's public recent accepted submissions every 5 minutes. If a participant solves the active question, the bot marks their challenge status as solved. You can also trigger an immediate check with <code>/challenge check</code>.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Can multiple Discord servers use the bot independently?</span>
+            <span class="faq-toggle-icon">[+]</span>
+          </button>
+          <div class="faq-answer">
+            Yes. Every server maintains isolated challenge configurations, dedicated channels, deduplicated problem history, and distinct guild leaderboards.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How do I self-host DailyCode?</span>
+            <span class="faq-toggle-icon">[+]</span>
+          </button>
+          <div class="faq-answer">
+            DailyCode is a Spring Boot 3 Java application. Clone the repository, provide your <code>DISCORD_TOKEN</code> and <code>DATABASE_URL</code> in environment variables, and run with Docker (<code>docker compose up</code>) or Maven (<code>mvn spring-boot:run</code>).
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Big Brutalist Action Callout -->
+  <section class="section">
+    <div class="container">
+      <div class="action-callout">
+        <div>
+          <h2 class="callout-title">Level Up Your Server's Coding Habit</h2>
+          <p class="callout-desc">Add DailyCode to your server in 30 seconds and let automated problems fuel daily practice.</p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg dynamic-invite-link">
+            <span>+ Add to Discord ↗</span>
+          </a>
+          <a href="https://github.com/Seraph919/DailyCode" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
+            <span>Star on GitHub ★</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-matrix">
+        <div>
+          <div class="brand-wrap" style="margin-bottom: 12px;">
+            <div class="brand-logo-frame" style="width: 32px; height: 32px;">
+              <img src="./assets/logo.png" alt="Logo" class="brand-logo" style="width: 24px; height: 24px;">
+            </div>
+            <span class="brand-title" style="font-size: 1.15rem;">Daily<span class="text-orange">Code</span></span>
+          </div>
+          <p style="color: var(--text-dim); font-size: 0.84rem; line-height: 1.5; max-width: 300px;">
+            Automating algorithmic problem solving across developer Discord communities worldwide.
+          </p>
+        </div>
+
+        <div>
+          <div class="footer-col-title">// Bot</div>
+          <ul class="footer-col-links">
+            <li><a href="https://discord.com/oauth2/authorize?client_id=1559164347085885511&permissions=274878486976&scope=bot%20applications.commands" class="dynamic-invite-link">> Add to Server</a></li>
+            <li><a href="#permissions">> Permissions Calc</a></li>
+            <li><a href="#commands">> Command Reference</a></li>
+            <li><a href="#features">> Features</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">// Source</div>
+          <ul class="footer-col-links">
+            <li><a href="https://github.com/Seraph919/DailyCode" target="_blank" rel="noopener noreferrer">> GitHub Repo</a></li>
+            <li><a href="https://github.com/Seraph919/DailyCode/issues" target="_blank" rel="noopener noreferrer">> Issue Tracker</a></li>
+            <li><a href="https://github.com/Seraph919/DailyCode/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">> MIT License</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">// Ecosystem</div>
+          <ul class="footer-col-links">
+            <li><a href="https://leetcode.com" target="_blank" rel="noopener noreferrer">> LeetCode</a></li>
+            <li><a href="https://discord.com/developers/docs" target="_blank" rel="noopener noreferrer">> Discord API</a></li>
+            <li><a href="#faq">> FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2026 DailyCode. Open Source software by <a href="https://github.com/Seraph919" style="color: var(--accent-amber); font-weight: 700;">Seraph919</a>.</span>
+        <span>ENGINEERED WITH JAVA 21 & SPRING BOOT</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
