@@ -2,10 +2,8 @@ package com.dailycode.bot.application.challenge;
 
 import com.dailycode.bot.application.challenge.dto.AutomaticCheckBatchDto;
 import com.dailycode.bot.application.challenge.dto.AutomaticCheckTargetDto;
-import com.dailycode.bot.domain.challenge.DailyProgressStatus;
 import com.dailycode.bot.repository.ChallengeParticipantRepository;
 import com.dailycode.bot.repository.DailyChallengeRepository;
-import com.dailycode.bot.repository.DailyProgressRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,6 @@ import java.util.List;
 public class AutomaticCheckTargets {
     private final ChallengeParticipantRepository participants;
     private final DailyChallengeRepository assignments;
-    private final DailyProgressRepository progress;
     private final Clock clock;
 
     @Transactional(readOnly = true)
@@ -35,18 +32,8 @@ public class AutomaticCheckTargets {
             ZoneId zone = ZoneId.of(challenge.getTimezone());
             LocalDate today = LocalDate.now(clock.withZone(zone));
             String userId = participant.getDiscordUser().getDiscordUserId();
-            // Revisit yesterday to catch on-time submissions discovered after midnight.
-            for (LocalDate date : List.of(today.minusDays(1), today)) {
-                if (date.isBefore(challenge.getStartDate()) || date.isAfter(challenge.getEndDate())
-                        || !participant.getJoinedAt().isBefore(date.plusDays(1).atStartOfDay(zone).toInstant())) {
-                    continue;
-                }
-                var assignment = assignments.findByChallenge_IdAndChallenge_DiscordGuildIdAndAssignmentDate(
-                        challenge.getId(), challenge.getDiscordGuildId(), date);
-                if (assignment.isEmpty()) continue;
-                var saved = progress.findProgress(assignment.get().getId(), challenge.getDiscordGuildId(), userId);
-                if (saved.isPresent() && saved.get().getStatus() == DailyProgressStatus.COMPLETED) continue;
-                targets.add(new AutomaticCheckTargetDto(challenge.getId(), challenge.getDiscordGuildId(), userId, date));
+            if (assignments.hasUncompletedAssignments(challenge.getId(), participant.getId(), today)) {
+                targets.add(new AutomaticCheckTargetDto(challenge.getId(), challenge.getDiscordGuildId(), userId));
             }
         }
         return new AutomaticCheckBatchDto(page.getLast().getId(), List.copyOf(targets));

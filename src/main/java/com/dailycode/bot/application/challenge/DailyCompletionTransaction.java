@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.List;
 
 import static com.dailycode.bot.application.challenge.DailyCompletionException.Reason.*;
 
@@ -38,6 +39,25 @@ public class DailyCompletionTransaction {
     private final DailyProgressRepository progress;
     private final SubmissionEligibilityChecker eligibility;
     private final Clock clock;
+
+    @Transactional(readOnly = true)
+    public List<LocalDate> assignmentDates(Long challengeId, String guildId, String discordUserId, boolean automatic) {
+        var challenge = challenges.findByIdAndDiscordGuildId(challengeId, guildId)
+                .orElseThrow(() -> new DailyCompletionException(CHALLENGE_NOT_FOUND));
+        if (challenge.getStatus() == ChallengeStatus.CANCELLED) {
+            throw new DailyCompletionException(CHALLENGE_CANCELLED);
+        }
+        participants.findMembership(challengeId, guildId, discordUserId)
+                .orElseThrow(() -> new DailyCompletionException(NOT_JOINED));
+        var account = accounts.findByDiscordUser_DiscordUserId(discordUserId)
+                .orElseThrow(() -> new DailyCompletionException(ACCOUNT_NOT_VERIFIED));
+        if (!account.isVerified() || account.getVerifiedAt() == null) {
+            throw new DailyCompletionException(ACCOUNT_NOT_VERIFIED);
+        }
+        if (automatic && challenge.getAnnouncementChannelId() == null) return List.of();
+        return assignments.findAssignedDates(challengeId, guildId,
+                LocalDate.now(clock.withZone(ZoneId.of(challenge.getTimezone()))));
+    }
 
     @Transactional
     public DailyCompletionCheckDto prepare(Long challengeId, String guildId, String discordUserId, LocalDate date) {
@@ -126,9 +146,8 @@ public class DailyCompletionTransaction {
         if (assignment.getAssignedAt().isAfter(eligibleFrom)) eligibleFrom = assignment.getAssignedAt();
         if (participant.getJoinedAt().isAfter(eligibleFrom)) eligibleFrom = participant.getJoinedAt();
         Instant deadline = requestedDate.plusDays(1).atStartOfDay(zone).toInstant();
-        if (!eligibleFrom.isBefore(deadline)) {
-            throw new DailyCompletionException(NOT_ELIGIBLE_FOR_DAY);
-        }
+        // The original deadline labels on-time versus late progress. It no longer
+        // prevents completing an older assignment after joining the challenge.
         DailyProgress record = progress.findProgress(assignment.getId(), guildId, discordUserId).orElse(null);
         DailyCompletionResultDto existing = record != null && record.getStatus() == DailyProgressStatus.COMPLETED
                 ? result(record, assignment, DailyCompletionOutcome.ALREADY_COMPLETED) : null;

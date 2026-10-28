@@ -1,5 +1,9 @@
 package com.dailycode.bot.discord;
 
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
+import static com.dailycode.bot.discord.CardMatchers.*;
+
 import com.dailycode.bot.application.leetcode.LeetCodeLinkService;
 import com.dailycode.bot.application.leetcode.LeetCodeVerificationService;
 import com.dailycode.bot.application.leetcode.dto.LeetCodeLinkChallengeDto;
@@ -40,8 +44,8 @@ class LeetCodeCommandHandlerTests {
         when(user.getName()).thenReturn("alice_discord");
         when(event.getOption("username")).thenReturn(usernameOption);
         when(event.deferReply(true)).thenReturn(mock(ReplyCallbackAction.class));
-        when(event.reply(anyString())).thenReturn(mock(ReplyCallbackAction.class, RETURNS_SELF));
-        when(hook.editOriginal(anyString())).thenReturn(editAction);
+        when(event.reply(any(MessageCreateData.class))).thenReturn(mock(ReplyCallbackAction.class, RETURNS_SELF));
+        when(hook.editOriginal(any(MessageEditData.class))).thenReturn(editAction);
     }
 
     @Test
@@ -62,7 +66,7 @@ class LeetCodeCommandHandlerTests {
 
         verify(users).register("123456789012345678", "alice_discord");
         verify(links).startLink("123456789012345678", "alice_lc");
-        verify(hook).editOriginal(contains("dailycode-token123"));
+        verify(hook).editOriginal(editContaining("dailycode-token123"));
     }
 
     @Test
@@ -73,7 +77,7 @@ class LeetCodeCommandHandlerTests {
         handler.afterAcknowledgement(event, hook);
 
         verify(verification).verify("123456789012345678");
-        verify(hook).editOriginal(contains("Your LeetCode account is verified!"));
+        verify(hook).editOriginal(editContaining("Your LeetCode account is verified!"));
     }
 
     @Test
@@ -83,7 +87,7 @@ class LeetCodeCommandHandlerTests {
 
         handler.handle(event);
 
-        verify(event).reply("Enter a LeetCode username containing 1 to 100 characters.");
+        verify(event).reply(cardContaining("Enter a LeetCode username containing 1 to 100 characters."));
     }
 }
 

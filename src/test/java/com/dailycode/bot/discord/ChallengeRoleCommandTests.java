@@ -1,5 +1,9 @@
 package com.dailycode.bot.discord;
 
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
+import static com.dailycode.bot.discord.CardMatchers.*;
+
 import com.dailycode.bot.application.challenge.ChallengeAutomationService;
 import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import net.dv8tion.jda.api.Permission;
@@ -56,7 +60,7 @@ class ChallengeRoleCommandTests {
         when(role.getId()).thenReturn("300");
         when(role.isMentionable()).thenReturn(true);
         when(event.deferReply(true)).thenReturn(mock(ReplyCallbackAction.class));
-        when(event.reply(anyString())).thenReturn(mock(ReplyCallbackAction.class, RETURNS_SELF));
+        when(event.reply(any(MessageCreateData.class))).thenReturn(mock(ReplyCallbackAction.class, RETURNS_SELF));
     }
 
     @Test
@@ -77,7 +81,7 @@ class ChallengeRoleCommandTests {
         selectRole();
         when(role.isPublicRole()).thenReturn(true);
         handler.handle(event);
-        verify(event).reply("Choose a role in this server other than @everyone.");
+        verify(event).reply(cardContaining("Choose a role in this server other than @everyone."));
         verify(event, never()).deferReply(anyBoolean());
     }
 
@@ -88,7 +92,7 @@ class ChallengeRoleCommandTests {
         when(other.getId()).thenReturn("999");
         when(role.getGuild()).thenReturn(other);
         handler.handle(event);
-        verify(event).reply("Choose a role in this server other than @everyone.");
+        verify(event).reply(cardContaining("Choose a role in this server other than @everyone."));
         verify(event, never()).deferReply(anyBoolean());
     }
 
@@ -97,7 +101,7 @@ class ChallengeRoleCommandTests {
         selectRole();
         when(role.isMentionable()).thenReturn(false);
         handler.handle(event);
-        verify(event).reply("Make that role mentionable or give me Mention Everyone permission in that channel.");
+        verify(event).reply(cardContaining("Make that role mentionable or give me Mention Everyone permission in that channel."));
         verify(event, never()).deferReply(anyBoolean());
     }
 
@@ -114,7 +118,7 @@ class ChallengeRoleCommandTests {
     void rejectsChannelWithoutEmbedPermission() {
         when(bot.hasPermission(channel, Permission.MESSAGE_EMBED_LINKS)).thenReturn(false);
         handler.handle(event);
-        verify(event).reply("I need Embed Links permission in that channel to post challenge cards.");
+        verify(event).reply(cardContaining("I need Embed Links permission in that channel to post challenge cards."));
         verify(event, never()).deferReply(anyBoolean());
     }
 

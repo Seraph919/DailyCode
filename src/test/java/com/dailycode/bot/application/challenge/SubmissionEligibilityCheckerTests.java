@@ -55,6 +55,15 @@ class SubmissionEligibilityCheckerTests {
     }
 
     @Test
+    void acceptsSolutionsOnOrAfterTheOriginalDeadline() {
+        for (Instant submittedAt : List.of(deadline, deadline.plusSeconds(1), deadline.plusSeconds(7 * 86400))) {
+            var late = new LeetCodeAcceptedSubmissionDto("94", "Two Sum", "two-sum", submittedAt);
+            var feed = new LeetCodeRecentSubmissionsDto("alice_lc", List.of(late));
+            assertThat(checker.findEligible(check, feed, submittedAt.plusSeconds(60))).contains(late);
+        }
+    }
+
+    @Test
     void throwsWhenFeedUsernameMismatched() {
         var feed = new LeetCodeRecentSubmissionsDto("bob_lc", List.of());
 

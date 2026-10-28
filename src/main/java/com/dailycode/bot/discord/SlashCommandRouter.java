@@ -43,7 +43,7 @@ public class SlashCommandRouter extends ListenerAdapter {
         try {
             handler = handlers.get(event.getName());
             if (handler == null) {
-                reply = event.reply("This command is not available yet.");
+                reply = event.reply(CommandCards.create("Command unavailable", "This command is not available yet."));
                 reply.setEphemeral(true);
             } else {
                 reply = handler.handle(event);
@@ -59,7 +59,7 @@ public class SlashCommandRouter extends ListenerAdapter {
                 return;
             }
             try {
-                reply = event.reply("Something went wrong. Please try again.");
+                reply = event.reply(CommandCards.create("Unable to complete command", "Something went wrong. Please try again."));
                 reply.setEphemeral(true);
             } catch (RuntimeException replyFailure) {
                 log.error("Could not prepare the error reply for /{}.", event.getName(), replyFailure);
@@ -103,7 +103,7 @@ public class SlashCommandRouter extends ListenerAdapter {
             } catch (RuntimeException failure) {
                 log.error("Could not start work for /{} after acknowledgement.", commandName, failure);
                 try {
-                    hook.editOriginal("Something went wrong. Please try again.")
+                    hook.editOriginal(CommandCards.edit("Unable to complete command", "Something went wrong. Please try again."))
                             .queue(null, new ReplyFailureLogger(commandName));
                 } catch (RuntimeException replyFailure) {
                     log.warn("Could not queue the error update for /{}.", commandName, replyFailure);

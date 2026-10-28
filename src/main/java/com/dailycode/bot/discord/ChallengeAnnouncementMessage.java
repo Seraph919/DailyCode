@@ -30,7 +30,7 @@ final class ChallengeAnnouncementMessage {
                 .setColor(color)
                 .setAuthor(bounded("Challenge #" + assignment.getChallengeId() + " · " + value.getChallengeName(), 256))
                 .setTitle(bounded(title, 256), url)
-                .setDescription("Solve today's problem on LeetCode before the deadline. Join the challenge to track your progress.")
+                .setDescription("Solve today's problem on LeetCode. Late solutions still count. Join the challenge to track your progress.")
                 .addField("Difficulty", difficulty, true)
                 .addField("Participants", value.getParticipantCount() + " coders", true)
                 .addField("Verification", "Automatic LeetCode checks", true)

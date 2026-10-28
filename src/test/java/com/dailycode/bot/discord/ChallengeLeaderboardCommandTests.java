@@ -1,5 +1,9 @@
 package com.dailycode.bot.discord;
 
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
+import static com.dailycode.bot.discord.CardMatchers.*;
+
 import com.dailycode.bot.application.challenge.ChallengeLeaderboardService;
 import com.dailycode.bot.application.challenge.DailyCompletionException;
 import com.dailycode.bot.application.challenge.dto.ChallengeLeaderboardDto;
@@ -42,8 +46,8 @@ class ChallengeLeaderboardCommandTests {
         when(id.getAsString()).thenReturn("1");
         when(event.getOption("id")).thenReturn(id);
         when(event.deferReply(true)).thenReturn(mock(ReplyCallbackAction.class));
-        when(event.reply(anyString())).thenReturn(mock(ReplyCallbackAction.class, RETURNS_SELF));
-        when(hook.editOriginal(anyString())).thenReturn(edit);
+        when(event.reply(any(MessageCreateData.class))).thenReturn(mock(ReplyCallbackAction.class, RETURNS_SELF));
+        when(hook.editOriginal(any(MessageEditData.class))).thenReturn(edit);
     }
 
     @Test
@@ -53,11 +57,11 @@ class ChallengeLeaderboardCommandTests {
                 List.of(new ChallengeLeaderboardDto.Entry(1, "300", 3),
                         new ChallengeLeaderboardDto.Entry(1, "301", 3))));
         runCommand();
-        ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<MessageEditData> message = ArgumentCaptor.forClass(MessageEditData.class);
         verify(hook).editOriginal(message.capture());
-        assertThat(message.getValue()).contains("#1 · <@300> — 3 completed", "#1 · <@301> — 3 completed",
+        assertThat(text(message.getValue().getEmbeds())).contains("#1: <@300> · **3** completed", "#1: <@301> · **3** completed",
                 "Page 1/1", "\\*Practice\\*", "recorded completions").hasSizeLessThan(2000);
-        verify(edit).setAllowedMentions(List.of());
+        assertThat(message.getValue().getAllowedMentions()).isEmpty();
     }
 
     @Test
@@ -67,14 +71,14 @@ class ChallengeLeaderboardCommandTests {
         when(event.getOption("page")).thenReturn(page);
         when(leaderboard.leaderboard(1L, "200", 3)).thenReturn(new ChallengeLeaderboardDto(1L, "Practice", 3, 2, 12, List.of()));
         runCommand();
-        verify(hook).editOriginal("That leaderboard page does not exist. Choose a page from 1 to 2.");
+        verify(hook).editOriginal(editContaining("That leaderboard page does not exist. Choose a page from 1 to 2."));
     }
 
     @Test
     void explainsAnEmptyLeaderboard() {
         when(leaderboard.leaderboard(1L, "200", 1)).thenReturn(new ChallengeLeaderboardDto(1L, "Practice", 1, 1, 0, List.of()));
         runCommand();
-        verify(hook).editOriginal(contains("No participants yet. Join with /challenge join."));
+        verify(hook).editOriginal(editContaining("No participants yet: Join with /challenge join."));
     }
 
     @Test
@@ -83,7 +87,7 @@ class ChallengeLeaderboardCommandTests {
         when(page.getAsLong()).thenReturn(0L);
         when(event.getOption("page")).thenReturn(page);
         handler.handle(event);
-        verify(event).reply("Page must be between 1 and 1000000.");
+        verify(event).reply(cardContaining("Page must be between 1 and 1000000."));
         verify(event, never()).deferReply(anyBoolean());
         verifyNoInteractions(leaderboard);
     }
@@ -93,14 +97,14 @@ class ChallengeLeaderboardCommandTests {
         when(leaderboard.leaderboard(1L, "200", 1)).thenThrow(
                 new DailyCompletionException(DailyCompletionException.Reason.CHALLENGE_NOT_FOUND));
         runCommand();
-        verify(hook).editOriginal("That challenge was not found in this server.");
+        verify(hook).editOriginal(editContaining("That challenge was not found in this server."));
     }
 
     @Test
     void handlesDatabaseFailuresWithoutExposingDetails() {
         when(leaderboard.leaderboard(1L, "200", 1)).thenThrow(new IllegalStateException("Database detail"));
         runCommand();
-        verify(hook).editOriginal("Could not load the leaderboard. Please try again shortly.");
+        verify(hook).editOriginal(editContaining("Could not load the leaderboard. Please try again shortly."));
     }
 
     private void runCommand() {

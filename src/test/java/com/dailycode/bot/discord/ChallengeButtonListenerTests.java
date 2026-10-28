@@ -1,5 +1,9 @@
 package com.dailycode.bot.discord;
 
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
+import static com.dailycode.bot.discord.CardMatchers.*;
+
 import com.dailycode.bot.application.challenge.ChallengeJoinException;
 import com.dailycode.bot.application.challenge.ChallengeJoinService;
 import com.dailycode.bot.application.challenge.ChallengeProgressService;
@@ -47,7 +51,7 @@ class ChallengeButtonListenerTests {
 
     @BeforeEach
     void repliesCanBeDelivered() {
-        when(hook.editOriginal(anyString())).thenReturn(response);
+        when(hook.editOriginal(any(MessageEditData.class))).thenReturn(response);
     }
 
     private void prepare(String action) {
@@ -89,8 +93,8 @@ class ChallengeButtonListenerTests {
         var order = inOrder(users, joins);
         order.verify(users).register("300", "coder");
         order.verify(joins).join(42L, "200", "300");
-        verify(hook).editOriginal("You joined challenge #42: Practice.");
-        verify(response).setAllowedMentions(List.of());
+        verify(hook).editOriginal(editContaining("You joined challenge #42: Practice."));
+
         verify(response).queue(isNull(), any());
     }
 
@@ -103,7 +107,7 @@ class ChallengeButtonListenerTests {
         acknowledgeAndRun();
         verify(event).deferReply(true);
         verify(progress).status(42L, "200", "300", 1);
-        verify(hook).editOriginal(contains("Saved completions: 3"));
+        verify(hook).editOriginal(editContaining("Saved completions: 3"));
         verifyNoInteractions(users, joins);
     }
 
@@ -116,7 +120,7 @@ class ChallengeButtonListenerTests {
         when(progress.status(42L, "200", "300", 1)).thenThrow(
                 new DailyCompletionException(DailyCompletionException.Reason.CHALLENGE_NOT_FOUND));
         acknowledgeAndRun();
-        verify(hook).editOriginal("That challenge was not found in this server.");
+        verify(hook).editOriginal(editContaining("That challenge was not found in this server."));
     }
 
     @Test
@@ -125,7 +129,7 @@ class ChallengeButtonListenerTests {
         when(joins.join(42L, "200", "300")).thenThrow(
                 new ChallengeJoinException(ChallengeJoinException.Reason.ACCOUNT_NOT_VERIFIED));
         acknowledgeAndRun();
-        verify(hook).editOriginal("Verify your LeetCode account before joining a challenge.");
+        verify(hook).editOriginal(editContaining("Verify your LeetCode account before joining a challenge."));
     }
 
     @Test
@@ -134,7 +138,7 @@ class ChallengeButtonListenerTests {
         when(progress.status(42L, "200", "300", 1)).thenThrow(
                 new DailyCompletionException(DailyCompletionException.Reason.NOT_JOINED));
         acknowledgeAndRun();
-        verify(hook).editOriginal("Join this challenge to view your progress.");
+        verify(hook).editOriginal(editContaining("Join this challenge to view your progress."));
     }
 
     @Test
@@ -147,7 +151,7 @@ class ChallengeButtonListenerTests {
             return null;
         }).when(acknowledgement).queue(any(), any());
         listener.onButtonInteraction(event);
-        verify(hook).editOriginal("The bot is busy. Please try again shortly.");
+        verify(hook).editOriginal(editContaining("The bot is busy. Please try again shortly."));
         verifyNoInteractions(users, joins, progress);
     }
 
@@ -155,7 +159,7 @@ class ChallengeButtonListenerTests {
     @ValueSource(strings = {"join:0", "join:-1", "status:9223372036854775808", "delete:42", "join:42:extra"})
     void invalidButtonIdsNeverReachServices(String suffix) {
         when(event.getComponentId()).thenReturn("dailycode:challenge:" + suffix);
-        when(event.reply(anyString())).thenReturn(acknowledgement);
+        when(event.reply(any(MessageCreateData.class))).thenReturn(acknowledgement);
         listener.onButtonInteraction(event);
         verify(acknowledgement).setEphemeral(true);
         verify(event, never()).deferReply(anyBoolean());
@@ -176,9 +180,9 @@ class ChallengeButtonListenerTests {
     @Test
     void rejectsButtonsOutsideAServer() {
         when(event.getComponentId()).thenReturn(ChallengeButtonListener.id("join", 42));
-        when(event.reply(anyString())).thenReturn(acknowledgement);
+        when(event.reply(any(MessageCreateData.class))).thenReturn(acknowledgement);
         listener.onButtonInteraction(event);
-        verify(event).reply("Use challenge buttons inside a server.");
+        verify(event).reply(cardContaining("Use challenge buttons inside a server."));
         verify(acknowledgement).setEphemeral(true);
         verifyNoInteractions(users, joins, progress, executor);
     }

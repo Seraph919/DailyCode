@@ -27,12 +27,12 @@ public class ChallengeButtonListener extends ListenerAdapter {
             if (!match.matches()) throw new IllegalArgumentException();
             challengeId = Long.parseLong(match.group(2));
         } catch (IllegalArgumentException failure) {
-            event.reply("This challenge button is invalid. Use /challenge instead.").setEphemeral(true)
+            event.reply(CommandCards.create("Invalid button", "This challenge button is invalid. Use /challenge instead.")).setEphemeral(true)
                     .queue(null, failureToReply -> log.debug("Could not acknowledge invalid challenge button."));
             return;
         }
         if (!event.isFromGuild() || event.getMember() == null) {
-            event.reply("Use challenge buttons inside a server.").setEphemeral(true)
+            event.reply(CommandCards.create("Server required", "Use challenge buttons inside a server.")).setEphemeral(true)
                     .queue(null, failure -> log.debug("Could not acknowledge challenge button outside a server."));
             return;
         }

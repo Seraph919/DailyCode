@@ -27,7 +27,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.core.task.TaskRejectedException;
@@ -35,7 +34,6 @@ import org.springframework.core.task.TaskRejectedException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -74,7 +72,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             }
             return event.deferReply(true);
         } catch (InvalidOptionsException failure) {
-            return event.reply(failure.getMessage()).setEphemeral(true);
+            return event.reply(CommandCards.create("Check your command", failure.getMessage())).setEphemeral(true);
         }
     }
 
@@ -149,24 +147,8 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             if (page > result.totalPages()) {
                 message = "That history page does not exist. Choose a page from 1 to " + result.totalPages() + ".";
             } else {
-                var text = new StringBuilder("Challenge #").append(id).append(": ")
-                        .append(MarkdownSanitizer.escape(result.name()))
-                        .append("\nSaved completions: ").append(result.completed())
-                        .append("\nToday · ").append(result.today()).append(" (").append(result.timezone())
-                        .append("): ").append(result.todayStatus())
-                        .append("\nAutomation: ").append(result.automationEnabled()
-                                ? "Enabled · daily at " + result.automationTime() + " (" + result.timezone() + ")"
-                                : "Disabled")
-                        .append("\n\nHistory · page ").append(page).append("/").append(result.totalPages());
-                for (var day : result.history()) {
-                    // Bound user-visible titles so five rows fit Discord's message limit.
-                    String title = day.title().length() > 70 ? day.title().substring(0, 67) + "..." : day.title();
-                    text.append("\n").append(day.date()).append(" · ")
-                            .append(MarkdownSanitizer.escape(title)).append(" — ").append(day.status());
-                }
-                if (result.history().isEmpty()) text.append("\nNo assignments yet.");
-                text.append("\n\nSaved progress only. Use /challenge check to check LeetCode now.");
-                message = text.toString();
+                updateCard(hook, ChallengeReplyMessage.status(result));
+                return;
             }
         } catch (DailyCompletionException failure) {
             message = failure.getReason() == DailyCompletionException.Reason.NOT_JOINED
@@ -186,18 +168,8 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             if (page > result.totalPages()) {
                 message = "That leaderboard page does not exist. Choose a page from 1 to " + result.totalPages() + ".";
             } else {
-                var text = new StringBuilder("Leaderboard · Challenge #").append(id).append(": ")
-                        .append(MarkdownSanitizer.escape(result.name()))
-                        .append("\nPage ").append(page).append("/").append(result.totalPages())
-                        .append(" · ").append(result.participants()).append(" participants\n");
-                for (var entry : result.entries()) {
-                    text.append("\n#").append(entry.rank()).append(" · <@").append(entry.discordUserId())
-                            .append("> — ").append(entry.completed()).append(" completed");
-                }
-                if (result.entries().isEmpty()) text.append("\nNo participants yet. Join with /challenge join.");
-                text.append("\n\nRanked by recorded completions. Equal scores share a rank.")
-                        .append("\nUse /challenge check to check your latest submission.");
-                message = text.toString();
+                updateCard(hook, ChallengeReplyMessage.leaderboard(result));
+                return;
             }
         } catch (DailyCompletionException failure) {
             message = "That challenge was not found in this server.";
@@ -245,10 +217,11 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         public void run() {
             String message;
             try {
-                var result = options.date == null
-                        ? completion.checkToday(options.challengeId, guildId, userId)
-                        : completion.check(options.challengeId, guildId, userId, options.date);
-                updateCard(hook, ChallengeReplyMessage.check(result));
+                if (options.date == null) {
+                    updateCard(hook, ChallengeReplyMessage.checkAll(completion.checkAll(options.challengeId, guildId, userId)));
+                } else {
+                    updateCard(hook, ChallengeReplyMessage.check(completion.check(options.challengeId, guildId, userId, options.date)));
+                }
                 return;
             } catch (DailyCompletionException failure) {
                 message = switch (failure.getReason()) {
@@ -264,7 +237,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 };
             } catch (LeetCodeClientException failure) {
                 log.warn("Could not fetch submissions for a challenge check ({}).", failure.getClass().getSimpleName());
-                message = "Couldn't check LeetCode right now. Please try again shortly.";
+                message = "Couldn't finish checking LeetCode. Saved completions are kept; please try again shortly.";
             } catch (ConstraintViolationException failure) {
                 message = "Check the challenge ID and date, then try again.";
             } catch (RuntimeException failure) {
@@ -452,7 +425,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 log.error("Could not change challenge automation ({}).", failure.getClass().getSimpleName());
                 message = "Could not change automation. Please try again later.";
             }
-            updateReply(hook, message);
+            updateCard(hook, CommandCards.edit("Automation settings", message));
         }
     }
 
@@ -503,12 +476,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     }
 
     private void updateReply(InteractionHook hook, String message) {
-        try {
-            hook.editOriginal(message).setAllowedMentions(List.of())
-                    .queue(null, new ReplyFailure());
-        } catch (RuntimeException failure) {
-            log.warn("Could not queue the challenge response ({}).", failure.getClass().getSimpleName());
-        }
+        updateCard(hook, CommandCards.edit("Challenge", message));
     }
 
     private class ReplyFailure implements Consumer<Throwable> {
@@ -556,7 +524,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 log.error("Could not join a challenge ({}).", failure.getClass().getSimpleName());
                 message = "Could not join the challenge. Please try again later.";
             }
-            updateReply(hook, message);
+            updateCard(hook, CommandCards.edit("Join challenge", message));
         }
     }
 
@@ -586,7 +554,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                 log.error("Could not create a challenge ({}).", failure.getClass().getSimpleName());
                 message = "Could not create the challenge. Please try again later.";
             }
-            updateReply(hook, message);
+            updateCard(hook, CommandCards.edit("Create challenge", message));
         }
     }
 }
