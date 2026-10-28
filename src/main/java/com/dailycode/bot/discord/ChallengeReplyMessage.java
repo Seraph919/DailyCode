@@ -4,6 +4,9 @@ import com.dailycode.bot.application.challenge.ChallengeTodayException;
 import com.dailycode.bot.application.challenge.DailyCompletionOutcome;
 import com.dailycode.bot.application.challenge.dto.ChallengeTodayDto;
 import com.dailycode.bot.application.challenge.dto.DailyCompletionResultDto;
+import com.dailycode.bot.application.challenge.dto.ChallengeCompletionResultDto;
+import com.dailycode.bot.application.challenge.dto.ChallengeProgressDto;
+import com.dailycode.bot.application.challenge.dto.ChallengeLeaderboardDto;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -29,7 +32,7 @@ final class ChallengeReplyMessage {
         var embed = new EmbedBuilder().setColor(color)
                 .setAuthor("Challenge #" + value.getChallengeId() + " · " + value.getChallengeName())
                 .setTitle(bounded(value.getTitle()), url)
-                .setDescription("Today's assigned problem. Submit an accepted solution before the deadline.")
+                .setDescription("Solve this problem on LeetCode. Solutions after the daily deadline still count as late completions.")
                 .addField("Difficulty", Character.toUpperCase(difficulty.charAt(0)) + difficulty.substring(1), true)
                 .addField("Goal", "1 accepted submission", true)
                 .addField("Deadline", "<t:" + deadline + ":F>\n<t:" + deadline + ":R>", false)
@@ -59,6 +62,49 @@ final class ChallengeReplyMessage {
         }
         return base(embed).setComponents(ActionRow.of(Button.secondary(
                 ChallengeButtonListener.id("status", value.getChallengeId()), "View Status"))).build();
+    }
+
+    static MessageEditData checkAll(ChallengeCompletionResultDto value) {
+        var embed = new EmbedBuilder().setColor(value.newlyCompleted() > 0 ? 0x2ECC71 : 0x5865F2)
+                .setTitle("Challenge #" + value.challengeId() + " · Completion check")
+                .setDescription(value.checked() == 0 ? "No problems have been assigned yet."
+                        : "Checked every assigned problem through today, including earlier days. Late solutions count too.")
+                .addField("Problems checked", String.valueOf(value.checked()), true)
+                .addField("New completions", String.valueOf(value.newlyCompleted()), true)
+                .addField("Already recorded", String.valueOf(value.alreadyCompleted()), true)
+                .addField("No recent match", String.valueOf(value.noMatch()), true)
+                .setFooter("LeetCode provides the latest 20 accepted submissions. Older saved completions are kept.");
+        return base(embed).setComponents(ActionRow.of(Button.secondary(
+                ChallengeButtonListener.id("status", value.challengeId()), "View Status"))).build();
+    }
+
+    static MessageEditData status(ChallengeProgressDto value) {
+        var embed = new EmbedBuilder().setColor(0x5865F2)
+                .setTitle(bounded("Challenge #" + value.challengeId() + " · " + value.name()))
+                .addField("Saved completions", String.valueOf(value.completed()), true)
+                .addField("Today · " + value.today(), value.todayStatus(), true)
+                .addField("Automation", value.automationEnabled()
+                        ? "Daily at **" + value.automationTime() + "** · " + value.timezone() : "Disabled", false)
+                .setDescription("**History · page " + value.page() + "/" + value.totalPages() + "**")
+                .setFooter(value.timezone() + " · Saved progress. Run /challenge check id:" + value.challengeId() + " to refresh.");
+        for (var day : value.history()) {
+            embed.addField(bounded(day.date() + " · " + day.title()),
+                    (day.status().startsWith("Completed") ? "✅ " : "▫️ ") + day.status(), false);
+        }
+        if (value.history().isEmpty()) embed.addField("History", "No assignments yet.", false);
+        return base(embed).build();
+    }
+
+    static MessageEditData leaderboard(ChallengeLeaderboardDto value) {
+        var embed = new EmbedBuilder().setColor(0xF1C40F)
+                .setTitle(bounded("Leaderboard · #" + value.challengeId() + " · " + value.name()))
+                .setDescription(value.participants() + " participants · Page " + value.page() + "/" + value.totalPages())
+                .setFooter("Ranked by recorded completions, including late solutions. Equal scores share a rank.");
+        for (var entry : value.entries()) {
+            embed.addField("#" + entry.rank(), "<@" + entry.discordUserId() + "> · **" + entry.completed() + "** completed", false);
+        }
+        if (value.entries().isEmpty()) embed.addField("No participants yet", "Join with /challenge join.", false);
+        return base(embed).build();
     }
 
     static MessageEditData waiting(long challengeId, ChallengeTodayException.Schedule schedule) {

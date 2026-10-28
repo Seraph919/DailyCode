@@ -2,7 +2,6 @@ package com.dailycode.bot.discord;
 
 import com.dailycode.bot.application.challenge.AutomaticCheckTargets;
 import com.dailycode.bot.application.challenge.DailyCompletionException;
-import com.dailycode.bot.application.challenge.DailyCompletionOutcome;
 import com.dailycode.bot.application.challenge.DailyCompletionService;
 import com.dailycode.bot.leetcode.LeetCodeClientException;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +35,11 @@ public class SubmissionCheckScheduler {
                     if (checked > 0) Thread.sleep(1000);
                     checked++;
                     try {
-                        var result = completion.checkAutomatic(target.getChallengeId(), target.getGuildId(),
-                                target.getDiscordUserId(), target.getDate());
-                        if (result.isPresent() && result.get().getOutcome() == DailyCompletionOutcome.COMPLETED) {
-                            log.info("Automatically recorded completion for assignment {} and participant user {}.",
-                                    result.get().getAssignmentId(), target.getDiscordUserId());
+                        var result = completion.checkAllAutomatic(target.getChallengeId(), target.getGuildId(),
+                                target.getDiscordUserId());
+                        if (result.newlyCompleted() > 0) {
+                            log.info("Automatically recorded {} completions for challenge {} and participant user {}.",
+                                    result.newlyCompleted(), target.getChallengeId(), target.getDiscordUserId());
                         }
                     } catch (DailyCompletionException failure) {
                         log.debug("Skipped automatic check for challenge {} ({}).",

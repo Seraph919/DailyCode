@@ -12,6 +12,6 @@ public class PingCommandHandler implements SlashCommandHandler {
 
     @Override
     public ReplyCallbackAction handle(SlashCommandInteractionEvent event) {
-        return event.reply("Pong!");
+        return event.reply(CommandCards.create("Pong!", "DailyCode is online."));
     }
 }

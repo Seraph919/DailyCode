@@ -3,6 +3,7 @@ package com.dailycode.bot.discord;
 import com.dailycode.bot.application.challenge.*;
 import com.dailycode.bot.application.challenge.dto.ChallengeTodayDto;
 import com.dailycode.bot.application.challenge.dto.DailyCompletionResultDto;
+import com.dailycode.bot.application.challenge.dto.ChallengeCompletionResultDto;
 import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -91,7 +92,10 @@ class ChallengeCardCommandTests {
     @ParameterizedTest
     @EnumSource(DailyCompletionOutcome.class)
     void checkDisplaysEachOutcomeAsACard(DailyCompletionOutcome outcome) {
-        when(completion.checkToday(1L, "200", "300")).thenReturn(new DailyCompletionResultDto(
+        var option = mock(OptionMapping.class);
+        when(option.getAsString()).thenReturn(date.toString());
+        when(event.getOption("date")).thenReturn(option);
+        when(completion.check(1L, "200", "300", date)).thenReturn(new DailyCompletionResultDto(
                 1L, 2L, date, null, outcome, null, null));
         var message = run("check");
         assertThat(message.getEmbeds().getFirst().getTitle()).isEqualTo(switch (outcome) {
@@ -99,8 +103,22 @@ class ChallengeCardCommandTests {
             case ALREADY_COMPLETED -> "Already completed";
             case NO_MATCH -> "No accepted submission found";
         });
-        verify(completion).checkToday(1L, "200", "300");
+        verify(completion).check(1L, "200", "300", date);
         verifyNoInteractions(today);
+    }
+
+    @Test
+    void omittedDateChecksTheWholeChallengeAndShowsCounts() {
+        when(completion.checkAll(1L, "200", "300")).thenReturn(new ChallengeCompletionResultDto(1L, 7, 2, 4, 1));
+        var embed = run("check").getEmbeds().getFirst();
+        assertThat(embed.getDescription()).contains("every assigned problem", "Late solutions");
+        assertThat(embed.getFields()).anySatisfy(field -> {
+            assertThat(field.getName()).isEqualTo("Problems checked");
+            assertThat(field.getValue()).isEqualTo("7");
+        });
+        assertThat(embed.getFooter().getText()).contains("latest 20");
+        verify(completion).checkAll(1L, "200", "300");
+        verify(completion, never()).checkToday(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -142,7 +160,7 @@ class ChallengeCardCommandTests {
 
     @Test
     void checkErrorsAreAlsoCardsWithoutLeakingServerData() {
-        when(completion.checkToday(1L, "200", "300")).thenThrow(
+        when(completion.checkAll(1L, "200", "300")).thenThrow(
                 new DailyCompletionException(DailyCompletionException.Reason.CHALLENGE_NOT_FOUND));
         var embed = run("check").getEmbeds().getFirst();
         assertThat(embed.getTitle()).isEqualTo("Unable to check submission");

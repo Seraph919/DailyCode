@@ -41,10 +41,10 @@ public class ChallengeCommandListener extends ListenerAdapter {
                                     .setMinLength(1).setMaxLength(19),
                             new OptionData(OptionType.INTEGER, "page", "History page; newest first", false)
                                     .setMinValue(1).setMaxValue(1000000));
-            SubcommandData check = new SubcommandData("check", "Check your accepted submission for a challenge day")
+            SubcommandData check = new SubcommandData("check", "Check completions across all assigned problems, including late solutions")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)
                                     .setMinLength(1).setMaxLength(19),
-                            new OptionData(OptionType.STRING, "date", "YYYY-MM-DD; defaults to today in the challenge timezone", false)
+                            new OptionData(OptionType.STRING, "date", "Optional YYYY-MM-DD to check just one day; omit to check all assigned days", false)
                                     .setMinLength(10).setMaxLength(10));
             SubcommandData leaderboard = new SubcommandData("leaderboard", "View participants ranked by recorded completions")
                     .addOptions(new OptionData(OptionType.STRING, "id", "Challenge ID", true)

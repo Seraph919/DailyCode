@@ -1,5 +1,9 @@
 package com.dailycode.bot.discord;
 
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
+import static com.dailycode.bot.discord.CardMatchers.*;
+
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -29,7 +33,7 @@ class SlashCommandRouterTests {
 
         router.onSlashCommandInteraction(event);
 
-        verify(event).reply("Pong!");
+        verify(event).reply(cardContaining("Pong!"));
         verify(reply).queue(any(), any());
         verify(reply, never()).setEphemeral(anyBoolean());
     }
@@ -72,8 +76,8 @@ class SlashCommandRouterTests {
 
         new SlashCommandRouter(List.of(handler)).onSlashCommandInteraction(event);
 
-        verify(event).reply("Something went wrong. Please try again.");
-        verify(event, never()).reply("Internal database detail");
+        verify(event).reply(cardContaining("Something went wrong. Please try again."));
+        verify(event, never()).reply(cardContaining("Internal database detail"));
         verify(reply).setEphemeral(true);
         verify(reply).queue(any(), any());
         assertThat(output.getOut()).contains("Failed to handle /broken.", "Internal database detail");
@@ -96,7 +100,7 @@ class SlashCommandRouterTests {
 
         router.onSlashCommandInteraction(event);
 
-        verify(event).reply("Pong!");
+        verify(event).reply(cardContaining("Pong!"));
         verify(reply).queue(any(), any());
     }
 
@@ -106,7 +110,7 @@ class SlashCommandRouterTests {
 
         router.onSlashCommandInteraction(event);
 
-        verify(event, never()).reply(anyString());
+        verify(event, never()).reply(any(MessageCreateData.class));
     }
 
     @Test
@@ -116,7 +120,7 @@ class SlashCommandRouterTests {
 
         router.onSlashCommandInteraction(event);
 
-        verify(event, never()).reply(anyString());
+        verify(event, never()).reply(any(MessageCreateData.class));
     }
 
     @Test
@@ -129,7 +133,7 @@ class SlashCommandRouterTests {
 
         new SlashCommandRouter(List.of(handler)).onSlashCommandInteraction(event);
 
-        verify(event, never()).reply(anyString());
+        verify(event, never()).reply(any(MessageCreateData.class));
     }
 
     @Test
@@ -143,8 +147,8 @@ class SlashCommandRouterTests {
         verify(reply).queue(any(), failureCallback.capture());
         failureCallback.getValue().accept(new IllegalStateException("Unknown interaction"));
 
-        verify(event).reply("Pong!");
-        verify(event, times(1)).reply(anyString());
+        verify(event).reply(cardContaining("Pong!"));
+        verify(event, times(1)).reply(any(MessageCreateData.class));
         verify(reply, times(1)).queue(any(), any());
         assertThat(output.getOut()).contains("Could not deliver reply for /ping.");
     }
@@ -157,7 +161,7 @@ class SlashCommandRouterTests {
 
         router.onSlashCommandInteraction(event);
 
-        verify(event, times(1)).reply(anyString());
+        verify(event, times(1)).reply(any(MessageCreateData.class));
         verify(reply, times(1)).queue(any(), any());
         assertThat(output.getOut()).contains("Could not queue reply for /ping.");
     }
@@ -174,7 +178,7 @@ class SlashCommandRouterTests {
 
     private ReplyCallbackAction reply(SlashCommandInteractionEvent event, String message) {
         ReplyCallbackAction reply = mock(ReplyCallbackAction.class, RETURNS_SELF);
-        when(event.reply(message)).thenReturn(reply);
+        when(event.reply(cardContaining(message))).thenReturn(reply);
         return reply;
     }
 }

@@ -1,7 +1,6 @@
 package com.dailycode.bot.application.challenge;
 
 import com.dailycode.bot.application.challenge.dto.ChallengeProgressDto;
-import com.dailycode.bot.domain.challenge.ChallengeParticipant;
 import com.dailycode.bot.domain.challenge.DailyChallenge;
 import com.dailycode.bot.domain.challenge.ChallengeStatus;
 import com.dailycode.bot.domain.challenge.DailyProgressStatus;
@@ -45,9 +44,9 @@ public class ChallengeProgressService {
                 .findByChallenge_IdAndChallenge_DiscordGuildIdAndAssignmentDateLessThanEqualOrderByAssignmentDateDesc(
                         challengeId, guild, today, PageRequest.of(page - 1, 5));
         var days = history.stream().map(day -> new ChallengeProgressDto.Day(day.getAssignmentDate(),
-                day.getProblem().getTitle(), dayStatus(day, member, guild, user, zone))).toList();
+                day.getProblem().getTitle(), dayStatus(day, guild, user, zone))).toList();
         String todayStatus = assignments.findByChallenge_IdAndChallenge_DiscordGuildIdAndAssignmentDate(
-                challengeId, guild, today).map(day -> dayStatus(day, member, guild, user, zone))
+                challengeId, guild, today).map(day -> dayStatus(day, guild, user, zone))
                 .orElse(challenge.getStatus() == ChallengeStatus.CANCELLED ? "Challenge cancelled"
                         : challenge.getStatus() == ChallengeStatus.COMPLETED ? "Challenge completed"
                         : today.isBefore(challenge.getStartDate()) ? "Challenge has not started"
@@ -60,14 +59,11 @@ public class ChallengeProgressService {
                 page, Math.max(1, history.getTotalPages()), days);
     }
 
-    private String dayStatus(DailyChallenge day, ChallengeParticipant member,
-            String guild, String user, ZoneId zone) {
+    private String dayStatus(DailyChallenge day, String guild, String user, ZoneId zone) {
         var saved = progress.findProgress(day.getId(), guild, user);
         if (saved.isPresent() && saved.get().getStatus() == DailyProgressStatus.COMPLETED) {
-            return "Completed";
-        }
-        if (!member.getJoinedAt().isBefore(day.getAssignmentDate().plusDays(1).atStartOfDay(zone).toInstant())) {
-            return "Before you joined";
+            return saved.get().getCompletedAt().isBefore(day.getAssignmentDate().plusDays(1).atStartOfDay(zone).toInstant())
+                    ? "Completed" : "Completed (late)";
         }
         // The recent-submissions feed cannot prove that an old day was missed.
         return "No completion recorded";

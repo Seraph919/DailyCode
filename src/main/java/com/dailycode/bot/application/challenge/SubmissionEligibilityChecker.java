@@ -27,7 +27,6 @@ public class SubmissionEligibilityChecker {
             }
             if (!check.getTitleSlug().equals(submission.getTitleSlug())
                     || submittedAt.isBefore(check.getEligibleFrom())
-                    || !submittedAt.isBefore(check.getDeadline())
                     || submittedAt.isAfter(now)) {
                 continue;
             }

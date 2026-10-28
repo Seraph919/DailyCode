@@ -31,30 +31,35 @@ You need a verified LeetCode account to join. To see today's problem and deadlin
 ```
 
 Open the problem link and submit your solution on LeetCode using your linked
-account. Aim for an **Accepted** result before the displayed deadline.
+account. Aim for an **Accepted** result before the displayed deadline. You can
+also solve an older problem later; the bot records it as **Completed (late)**.
+Solutions must be submitted after the problem was assigned and after you joined.
 
 `/challenge today` replies privately with a problem card and Join Challenge,
 View Status, and LeetCode Problem buttons. It reads the current assignment;
 it does not create a problem or change the posting schedule.
 
 Each day ends at midnight in the challenge's timezone. If you ask after midnight
-but before the next scheduled post, yesterday's problem has expired and today's
+but before the next scheduled post, yesterday's problem stays in your history and today's
 problem may not be assigned yet. The waiting card shows the challenge date,
 timezone, and scheduled posting time, or explains that automation is disabled.
 
 ## Check your completion
 
-With automation enabled, the bot checks submissions about every five minutes.
-You can also ask it to check now:
+With automation enabled, the bot checks all assigned problems in your challenge
+about every five minutes, including earlier days. You can also check now:
 
 ```text
 /challenge check id:1
 ```
 
 If you just submitted and the bot hasn't found it yet, wait a little and try
-again. The bot checks recent accepted submissions, so it may not find older work.
-The private result card shows whether completion was recorded, already recorded,
-or no eligible submission was found, with a View Status button.
+again. The bot compares your latest 20 accepted LeetCode submissions against all
+assigned problems through today. It keeps recorded completions, but cannot recover
+an older submission that is no longer in that feed.
+The private result card shows the number of problems checked, new completions,
+already recorded completions, and problems with no recent match. Use its
+View Status button to see your progress.
 
 To check a particular challenge day, add its date:
 
@@ -68,8 +73,9 @@ To check a particular challenge day, add its date:
 /challenge status id:1
 ```
 
-You'll see your recorded completions, today's status, the automation schedule,
-and your challenge history. To see older entries:
+The status card shows your recorded completions, today's status, the automation
+schedule, and five history entries per page. Late completions count toward your
+total and leaderboard score. To see older entries:
 
 ```text
 /challenge status id:1 page:2

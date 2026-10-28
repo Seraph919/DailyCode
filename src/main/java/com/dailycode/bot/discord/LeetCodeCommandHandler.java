@@ -16,7 +16,6 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -39,10 +38,10 @@ public class LeetCodeCommandHandler implements SlashCommandHandler {
             return event.deferReply(true);
         }
         if (!"connect".equals(event.getSubcommandName())) {
-            return event.reply("This LeetCode command is not available yet.").setEphemeral(true);
+            return event.reply(CommandCards.create("LeetCode", "This LeetCode command is not available yet.")).setEphemeral(true);
         }
         if (readUsername(event) == null) {
-            return event.reply("Enter a LeetCode username containing 1 to 100 characters.").setEphemeral(true);
+            return event.reply(CommandCards.create("LeetCode", "Enter a LeetCode username containing 1 to 100 characters.")).setEphemeral(true);
         }
         return event.deferReply(true);
     }
@@ -86,7 +85,7 @@ public class LeetCodeCommandHandler implements SlashCommandHandler {
 
     private void updateReply(InteractionHook hook, String message) {
         try {
-            hook.editOriginal(message).setAllowedMentions(List.of()).queue(null, new ReplyFailure());
+            hook.editOriginal(CommandCards.edit("LeetCode account", message)).queue(null, new ReplyFailure());
         } catch (RuntimeException failure) {
             log.warn("Could not queue the private link response ({}).", failure.getClass().getSimpleName());
         }
