@@ -45,13 +45,17 @@ class ChallengePersistenceTests {
         assertThat(challenge.getCreatedAt()).isNotNull();
         assertThat(challenge.getUpdatedAt()).isNotNull();
         assertThat(challenge.getStatus()).isEqualTo(ChallengeStatus.SCHEDULED);
+        assertThat(challenge.getDifficulty()).isEqualTo(ProblemDifficulty.EASY);
         assertThat(challenge.getAutomationDifficulty()).isEqualTo(ProblemDifficulty.EASY);
         assertThat(challenge.getAutomationTime()).isEqualTo(LocalTime.MIDNIGHT);
+        assertThat(challenge.getAutomationFrequency()).isEqualTo(7);
 
         em.clear();
         Challenge loaded = em.find(Challenge.class, id);
         assertThat(loaded.getName()).isEqualTo("Spring Practice");
         assertThat(loaded.getTimezone()).isEqualTo("Africa/Casablanca");
+        assertThat(loaded.getDifficulty()).isEqualTo(ProblemDifficulty.EASY);
+        assertThat(loaded.getAutomationFrequency()).isEqualTo(7);
     }
 
     @Test
@@ -188,5 +192,55 @@ class ChallengePersistenceTests {
         assertThatThrownBy(() -> em.persist(duplicateProgress))
                 .isInstanceOf(Exception.class)
                 .hasMessageContaining("uk_daily_progress_participant_day");
+    }
+
+    @Test
+    void persistsChallengeWithCustomDifficultyAndFrequency() {
+        DiscordUser creator = new DiscordUser("123456789012345699", "creator-diff-freq");
+        em.persist(creator);
+        Challenge challenge = new Challenge("100", "Hard Mode", creator,
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), "UTC", ProblemDifficulty.HARD);
+        em.persist(challenge);
+        em.flush();
+        em.clear();
+
+        Challenge loaded = em.find(Challenge.class, challenge.getId());
+        assertThat(loaded.getDifficulty()).isEqualTo(ProblemDifficulty.HARD);
+        assertThat(loaded.getAutomationFrequency()).isEqualTo(7);
+
+        loaded.automate("200", ProblemDifficulty.HARD, LocalTime.of(9, 0), null, 3);
+        em.flush();
+        em.clear();
+
+        Challenge automated = em.find(Challenge.class, challenge.getId());
+        assertThat(automated.getDifficulty()).isEqualTo(ProblemDifficulty.HARD);
+        assertThat(automated.getAutomationFrequency()).isEqualTo(3);
+
+        // 3 days a week: Monday, Wednesday, Friday
+        assertThat(automated.isAutomationScheduledOn(LocalDate.of(2026, 1, 5))).isTrue();  // Monday
+        assertThat(automated.isAutomationScheduledOn(LocalDate.of(2026, 1, 6))).isFalse(); // Tuesday
+        assertThat(automated.isAutomationScheduledOn(LocalDate.of(2026, 1, 7))).isTrue();  // Wednesday
+        assertThat(automated.isAutomationScheduledOn(LocalDate.of(2026, 1, 8))).isFalse(); // Thursday
+        assertThat(automated.isAutomationScheduledOn(LocalDate.of(2026, 1, 9))).isTrue();  // Friday
+        assertThat(automated.isAutomationScheduledOn(LocalDate.of(2026, 1, 10))).isFalse(); // Saturday
+        assertThat(automated.isAutomationScheduledOn(LocalDate.of(2026, 1, 11))).isFalse(); // Sunday
+    }
+
+    @Test
+    void rejectsInvalidAutomationFrequency() {
+        DiscordUser creator = new DiscordUser("123456789012345698", "freq-validator");
+        em.persist(creator);
+        Challenge challenge = new Challenge("100", "Freq Validation", creator,
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), "UTC");
+        em.persist(challenge);
+        em.flush();
+
+        assertThatThrownBy(() -> challenge.automate("200", ProblemDifficulty.EASY, LocalTime.MIDNIGHT, null, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Posting frequency must be between 1 and 7 days per week.");
+
+        assertThatThrownBy(() -> challenge.automate("200", ProblemDifficulty.EASY, LocalTime.MIDNIGHT, null, 8))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Posting frequency must be between 1 and 7 days per week.");
     }
 }

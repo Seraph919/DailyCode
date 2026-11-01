@@ -54,7 +54,9 @@ public class ChallengeTodayService {
         DailyChallenge assignment = assignments.findByChallenge_IdAndChallenge_DiscordGuildIdAndAssignmentDate(
                         challengeId, guildId.strip(), today)
                 .orElseThrow(() -> {
-                    var postingAt = challenge.getAnnouncementChannelId() == null ? null
+                    boolean scheduledToday = challenge.getAnnouncementChannelId() != null
+                            && challenge.isAutomationScheduledOn(today);
+                    var postingAt = !scheduledToday ? null
                             : today.atTime(challenge.getAutomationTime()).atZone(zone).toInstant();
                     return new ChallengeTodayException(NO_ASSIGNMENT, new ChallengeTodayException.Schedule(
                             today, zone.getId(), postingAt,

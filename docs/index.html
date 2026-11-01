@@ -393,15 +393,17 @@
           <div>
             <div class="command-card-header">
               <span class="command-name">/challenge automate</span>
-              <button class="copy-btn" data-copy="/challenge automate time:09:00 channel:" title="Copy Command">
+              <button class="copy-btn" data-copy="/challenge automate time:09:00 channel: frequency:7" title="Copy Command">
                 <span>[COPY]</span>
               </button>
             </div>
-            <p class="command-card-desc">Schedules recurring daily challenge drops in a specific channel at a chosen hour (HH:mm) with optional role ping.</p>
+            <p class="command-card-desc">Schedules recurring challenge drops in a specific channel at a chosen hour (HH:mm), weekly frequency (1–7 days/week), and difficulty with optional role ping.</p>
           </div>
           <div class="command-args">
-            <span class="arg-badge req">time: HH:mm</span>
             <span class="arg-badge req">channel: #channel</span>
+            <span class="arg-badge">time: HH:mm (optional)</span>
+            <span class="arg-badge">frequency: 1..7 (optional)</span>
+            <span class="arg-badge">difficulty: Easy|Medium|Hard (optional)</span>
             <span class="arg-badge">role: @role (optional)</span>
           </div>
         </div>
@@ -427,15 +429,16 @@
           <div>
             <div class="command-card-header">
               <span class="command-name">/challenge create</span>
-              <button class="copy-btn" data-copy="/challenge create name: target:1" title="Copy Command">
+              <button class="copy-btn" data-copy="/challenge create name: target:1 difficulty:Easy" title="Copy Command">
                 <span>[COPY]</span>
               </button>
             </div>
-            <p class="command-card-desc">Manually creates a new coding challenge for the server with a target number of problems.</p>
+            <p class="command-card-desc">Manually creates a new coding challenge for the server with a target number of problems and default difficulty.</p>
           </div>
           <div class="command-args">
             <span class="arg-badge req">name: string</span>
             <span class="arg-badge req">target: integer</span>
+            <span class="arg-badge">difficulty: Easy|Medium|Hard (optional)</span>
           </div>
         </div>
 

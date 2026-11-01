@@ -118,6 +118,25 @@ class ChallengeRoleCommandTests {
         verify(event, never()).deferReply(anyBoolean());
     }
 
+    @Test
+    void frequencyIsPassedToAutomation() {
+        OptionMapping freq = mock(OptionMapping.class);
+        when(event.getOption("frequency")).thenReturn(freq);
+        when(freq.getAsLong()).thenReturn(3L);
+        acceptAndRun();
+        verify(automation).enable(1L, "100", "200", ProblemDifficulty.EASY, LocalTime.MIDNIGHT, null, 3);
+    }
+
+    @Test
+    void rejectsInvalidFrequency() {
+        OptionMapping freq = mock(OptionMapping.class);
+        when(event.getOption("frequency")).thenReturn(freq);
+        when(freq.getAsLong()).thenReturn(8L);
+        handler.handle(event);
+        verify(event).reply("Choose a frequency between 1 and 7 times a week.");
+        verify(event, never()).deferReply(anyBoolean());
+    }
+
     private void selectRole() {
         OptionMapping roleOption = mock(OptionMapping.class);
         when(event.getOption("role")).thenReturn(roleOption);

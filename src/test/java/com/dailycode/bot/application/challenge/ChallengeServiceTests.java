@@ -3,6 +3,7 @@ package com.dailycode.bot.application.challenge;
 import com.dailycode.bot.application.challenge.dto.ChallengeDto;
 import com.dailycode.bot.domain.challenge.Challenge;
 import com.dailycode.bot.domain.leetcode.LeetCodeAccount;
+import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.domain.user.DiscordUser;
 import com.dailycode.bot.repository.ChallengeRepository;
 import com.dailycode.bot.repository.DiscordUserRepository;
@@ -54,6 +55,19 @@ class ChallengeServiceTests {
         assertThat(dto.getCreatorDiscordUserId()).isEqualTo("123456789012345678");
         assertThat(dto.getStartDate()).isEqualTo(LocalDate.of(2026, 10, 23));
         assertThat(dto.getTimezone()).isEqualTo("Africa/Casablanca");
+        assertThat(dto.getDifficulty()).isEqualTo(ProblemDifficulty.EASY);
+        verify(challenges).saveAndFlush(any(Challenge.class));
+    }
+
+    @Test
+    void createsChallengeWithSpecifiedDifficulty() {
+        when(challenges.saveAndFlush(any(Challenge.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChallengeDto dto = service.create("100", "123456789012345678", "Medium Sprint",
+                null, LocalDate.of(2026, 12, 31), null, ProblemDifficulty.MEDIUM);
+
+        assertThat(dto.getName()).isEqualTo("Medium Sprint");
+        assertThat(dto.getDifficulty()).isEqualTo(ProblemDifficulty.MEDIUM);
         verify(challenges).saveAndFlush(any(Challenge.class));
     }
 

@@ -155,7 +155,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                         .append("\nToday · ").append(result.today()).append(" (").append(result.timezone())
                         .append("): ").append(result.todayStatus())
                         .append("\nAutomation: ").append(result.automationEnabled()
-                                ? "Enabled · daily at " + result.automationTime() + " (" + result.timezone() + ")"
+                                ? "Enabled · " + (result.automationFrequency() == 7 ? "daily" : result.automationFrequency() + "x/week") + " at " + result.automationTime() + " (" + result.timezone() + ")"
                                 : "Disabled")
                         .append("\n\nHistory · page ").append(page).append("/").append(result.totalPages());
                 for (var day : result.history()) {
@@ -216,7 +216,16 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
             throw new InvalidOptionsException("You need Manage Server permission to create a challenge.");
         }
+        ProblemDifficulty difficulty = ProblemDifficulty.EASY;
+        if (event.getOption("difficulty") != null) {
+            try {
+                difficulty = ProblemDifficulty.valueOf(readText(event, "difficulty", 10));
+            } catch (IllegalArgumentException failure) {
+                throw new InvalidOptionsException("Choose Easy, Medium, or Hard.");
+            }
+        }
         return new CreateOptions(readText(event, "name", 100),
+                difficulty,
                 event.getOption("start_date") == null ? null : readDate(event, "start_date"),
                 readDate(event, "end_date"),
                 event.getOption("timezone") == null ? null : readText(event, "timezone", 100));
@@ -282,7 +291,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
         Long id = readChallengeId(event);
         if ("stop-auto".equals(event.getSubcommandName())) {
-            return new AutomationOptions(id, null, null, null, null);
+            return new AutomationOptions(id, null, null, null, null, 7);
         }
         OptionMapping option = event.getOption("channel");
         if (option == null || option.getAsChannel().getType() != ChannelType.TEXT) {
@@ -326,7 +335,19 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             }
             time = LocalTime.parse(value);
         }
-        return new AutomationOptions(id, channel.getId(), difficulty, time, roleId);
+        int frequency = 7;
+        OptionMapping frequencyOption = event.getOption("frequency");
+        if (frequencyOption == null) {
+            frequencyOption = event.getOption("days_per_week");
+        }
+        if (frequencyOption != null) {
+            long val = frequencyOption.getAsLong();
+            if (val < 1 || val > 7) {
+                throw new InvalidOptionsException("Choose a frequency between 1 and 7 times a week.");
+            }
+            frequency = (int) val;
+        }
+        return new AutomationOptions(id, channel.getId(), difficulty, time, roleId, frequency);
     }
 
     private void requireServerMember(SlashCommandInteractionEvent event) {
@@ -429,10 +450,14 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
                     automation.disable(options.challengeId, guildId);
                     message = "Automation is off for challenge #" + options.challengeId + ".";
                 } else {
-                    String timezone = automation.enable(options.challengeId, guildId, options.channelId,
-                            options.difficulty, options.time, options.roleId);
+                    String timezone = options.frequency == 7
+                            ? automation.enable(options.challengeId, guildId, options.channelId,
+                                    options.difficulty, options.time, options.roleId)
+                            : automation.enable(options.challengeId, guildId, options.channelId,
+                                    options.difficulty, options.time, options.roleId, options.frequency);
                     message = "Daily assignments and submission checks enabled for challenge #" + options.challengeId + " in <#"
                             + options.channelId + "> (" + options.difficulty + ")."
+                            + "\nFrequency: " + frequencySummary(options.frequency) + "."
                             + "\nDaily posting time: " + options.time + " (" + timezone + ")."
                             + "\nRole mention: " + (options.roleId == null ? "None." : "<@&" + options.roleId + ">.")
                             + "\nPosts on the first scheduler check at or after that time."
@@ -456,6 +481,18 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         }
     }
 
+    private static String frequencySummary(int frequency) {
+        return switch (frequency) {
+            case 1 -> "1 time a week (Monday)";
+            case 2 -> "2 times a week (Tuesday, Thursday)";
+            case 3 -> "3 times a week (Monday, Wednesday, Friday)";
+            case 4 -> "4 times a week (Monday, Tuesday, Thursday, Friday)";
+            case 5 -> "5 times a week (Monday to Friday)";
+            case 6 -> "6 times a week (Monday to Saturday)";
+            default -> "7 times a week (Every day)";
+        };
+    }
+
     @RequiredArgsConstructor
     private static class AutomationOptions {
         private final Long challengeId;
@@ -463,6 +500,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
         private final ProblemDifficulty difficulty;
         private final LocalTime time;
         private final String roleId;
+        private final int frequency;
     }
 
     @RequiredArgsConstructor
@@ -521,6 +559,7 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
     @RequiredArgsConstructor
     private static class CreateOptions {
         private final String name;
+        private final ProblemDifficulty difficulty;
         private final LocalDate startDate;
         private final LocalDate endDate;
         private final String timezone;
@@ -574,8 +613,9 @@ public class ChallengeCommandHandler implements SlashCommandHandler {
             try {
                 users.register(userId, username);
                 ChallengeDto challenge = challenges.create(guildId, userId, options.name,
-                        options.startDate, options.endDate, options.timezone);
+                        options.startDate, options.endDate, options.timezone, options.difficulty);
                 message = "Created challenge #" + challenge.getId() + ": " + challenge.getName() + ".\n"
+                        + "Difficulty: " + challenge.getDifficulty() + ".\n"
                         + "Scheduled " + challenge.getStartDate() + " to " + challenge.getEndDate()
                         + " (" + challenge.getTimezone() + ").";
             } catch (ChallengeCreationException failure) {

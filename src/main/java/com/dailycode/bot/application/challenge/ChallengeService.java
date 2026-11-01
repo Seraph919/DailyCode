@@ -3,6 +3,7 @@ package com.dailycode.bot.application.challenge;
 import com.dailycode.bot.application.challenge.dto.ChallengeDto;
 import com.dailycode.bot.domain.challenge.Challenge;
 import com.dailycode.bot.domain.leetcode.LeetCodeAccount;
+import com.dailycode.bot.domain.problem.ProblemDifficulty;
 import com.dailycode.bot.domain.user.DiscordUser;
 import com.dailycode.bot.repository.ChallengeRepository;
 import com.dailycode.bot.repository.DiscordUserRepository;
@@ -40,6 +41,18 @@ public class ChallengeService {
             LocalDate startDate,
             @NotNull LocalDate endDate,
             @Size(max = 100) String timezone) {
+        return create(discordGuildId, creatorDiscordUserId, name, startDate, endDate, timezone, ProblemDifficulty.EASY);
+    }
+
+    @Transactional
+    public ChallengeDto create(
+            @NotBlank @Size(max = 20) String discordGuildId,
+            @NotBlank @Size(max = 20) String creatorDiscordUserId,
+            @NotBlank @Size(max = 100) String name,
+            LocalDate startDate,
+            @NotNull LocalDate endDate,
+            @Size(max = 100) String timezone,
+            ProblemDifficulty difficulty) {
         ZoneId zone;
         try {
             zone = ZoneId.of(timezone == null ? "Africa/Casablanca" : timezone.strip());
@@ -67,12 +80,13 @@ public class ChallengeService {
             throw new ChallengeCreationException(ACCOUNT_NOT_VERIFIED);
         }
 
-        Challenge challenge = new Challenge(discordGuildId, name, creator, effectiveStart, endDate, zone.getId());
+        ProblemDifficulty effectiveDifficulty = difficulty == null ? ProblemDifficulty.EASY : difficulty;
+        Challenge challenge = new Challenge(discordGuildId, name, creator, effectiveStart, endDate, zone.getId(), effectiveDifficulty);
         challenges.saveAndFlush(challenge);
 
         // Return plain data while the transaction still owns the managed entities.
         return new ChallengeDto(challenge.getId(), challenge.getDiscordGuildId(), challenge.getName(),
                 creator.getDiscordUserId(), challenge.getStartDate(), challenge.getEndDate(),
-                challenge.getTimezone(), challenge.getStatus(), challenge.getCreatedAt());
+                challenge.getTimezone(), challenge.getStatus(), challenge.getCreatedAt(), challenge.getDifficulty());
     }
 }

@@ -26,6 +26,8 @@ public class ChallengeCommandListener extends ListenerAdapter {
                                     .setMinLength(1).setMaxLength(100),
                             new OptionData(OptionType.STRING, "end_date", "Last day, inclusive (YYYY-MM-DD)", true)
                                     .setMinLength(10).setMaxLength(10),
+                            new OptionData(OptionType.STRING, "difficulty", "Problem difficulty; defaults to Easy", false)
+                                    .addChoice("Easy", "EASY").addChoice("Medium", "MEDIUM").addChoice("Hard", "HARD"),
                             new OptionData(OptionType.STRING, "start_date", "First day (YYYY-MM-DD); defaults to today", false)
                                     .setMinLength(10).setMaxLength(10),
                             new OptionData(OptionType.STRING, "timezone", "Timezone; defaults to Africa/Casablanca", false)
@@ -58,6 +60,15 @@ public class ChallengeCommandListener extends ListenerAdapter {
                                     .setChannelTypes(ChannelType.TEXT),
                             new OptionData(OptionType.STRING, "difficulty", "Problem difficulty; defaults to Easy", false)
                                     .addChoice("Easy", "EASY").addChoice("Medium", "MEDIUM").addChoice("Hard", "HARD"),
+                            new OptionData(OptionType.INTEGER, "frequency", "How many times a week to post (1-7); defaults to 7", false)
+                                    .setMinValue(1).setMaxValue(7)
+                                    .addChoice("1 time a week (Monday)", 1)
+                                    .addChoice("2 times a week (Tue, Thu)", 2)
+                                    .addChoice("3 times a week (Mon, Wed, Fri)", 3)
+                                    .addChoice("4 times a week (Mon, Tue, Thu, Fri)", 4)
+                                    .addChoice("5 times a week (Mon-Fri)", 5)
+                                    .addChoice("6 times a week (Mon-Sat)", 6)
+                                    .addChoice("7 times a week (Every day)", 7),
                             new OptionData(OptionType.STRING, "time", "Daily posting time HH:mm (24-hour), challenge timezone; defaults to 00:00", false)
                                     .setMinLength(5).setMaxLength(5),
                             new OptionData(OptionType.ROLE, "role", "Role to mention in daily posts; omit for no mention", false));
