@@ -54,7 +54,7 @@ public class ChallengeProgressService {
                         : "No problem assigned");
         return new ChallengeProgressDto(challengeId, challenge.getName(), zone.getId(), today,
                 todayStatus, challenge.getAnnouncementChannelId() != null,
-                challenge.getAutomationTime(),
+                challenge.getAutomationTime(), challenge.getAutomationFrequency(),
                 progress.countByParticipant_IdAndStatus(member.getId(), DailyProgressStatus.COMPLETED),
                 page, Math.max(1, history.getTotalPages()), days);
     }

@@ -44,9 +44,18 @@ public class ChallengeAutomationService {
                        @NotNull @Pattern(regexp = "[0-9]{1,20}") String channelId,
                        @NotNull ProblemDifficulty difficulty, @NotNull LocalTime time,
                        @Pattern(regexp = "[0-9]{1,20}") String roleId) {
+        return enable(id, guildId, channelId, difficulty, time, roleId, 7);
+    }
+
+    @Transactional
+    public String enable(@NotNull @Positive Long id, @NotBlank @Size(max = 20) String guildId,
+                       @NotNull @Pattern(regexp = "[0-9]{1,20}") String channelId,
+                       @NotNull ProblemDifficulty difficulty, @NotNull LocalTime time,
+                       @Pattern(regexp = "[0-9]{1,20}") String roleId,
+                       Integer frequency) {
         Challenge challenge = locked(id, guildId);
         checkOpen(challenge);
-        challenge.automate(channelId, difficulty, time, roleId);
+        challenge.automate(channelId, difficulty, time, roleId, frequency);
         return challenge.getTimezone();
     }
 
@@ -80,6 +89,9 @@ public class ChallengeAutomationService {
         // and overlaps use the first occurrence. The durable claim prevents repeats.
         var scheduledAt = today.atTime(challenge.getAutomationTime()).atZone(zone).toInstant();
         if (now.isBefore(scheduledAt)) {
+            return Optional.empty();
+        }
+        if (!challenge.isAutomationScheduledOn(today)) {
             return Optional.empty();
         }
         var assignment = assignments.assignToday(id, guildId, challenge.getAutomationDifficulty());

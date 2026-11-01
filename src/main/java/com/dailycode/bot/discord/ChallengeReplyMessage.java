@@ -84,7 +84,7 @@ final class ChallengeReplyMessage {
                 .addField("Saved completions", String.valueOf(value.completed()), true)
                 .addField("Today · " + value.today(), value.todayStatus(), true)
                 .addField("Automation", value.automationEnabled()
-                        ? "Daily at **" + value.automationTime() + "** · " + value.timezone() : "Disabled", false)
+                        ? (value.automationFrequency() == 7 ? "Daily" : value.automationFrequency() + "x/week") + " at **" + value.automationTime() + "** · " + value.timezone() : "Disabled", false)
                 .setDescription("**History · page " + value.page() + "/" + value.totalPages() + "**")
                 .setFooter(value.timezone() + " · Saved progress. Run /challenge check id:" + value.challengeId() + " to refresh.");
         for (var day : value.history()) {
